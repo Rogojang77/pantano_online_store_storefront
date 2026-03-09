@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============== Design tokens (Blue system: modern SaaS) ============== */
+@layer base {
+  :root {
+    /* Primary – Brand Blue (#3D65A1) */
+    --color-primary: 61 101 161;
+    --color-primary-foreground: 255 255 255;
+
+    --color-primary-50: 240 245 252;
+    --color-primary-100: 224 234 249;
+    --color-primary-200: 197 216 243;
+    --color-primary-300: 159 191 232;
+    --color-primary-400: 109 154 216;
+    --color-primary-500: 61 101 161;   /* base */
+    --color-primary-600: 52 88 142;
+    --color-primary-700: 44 74 120;
+    --color-primary-800: 36 60 98;
+    --color-primary-900: 28 46 76;
+
+    /* Neutral – cool slate */
+    --color-neutral: 15 23 42;
+    --color-neutral-foreground: 248 250 252;
+
+    --color-neutral-50: 248 250 252;
+    --color-neutral-100: 241 245 249;
+    --color-neutral-200: 226 232 240;
+    --color-neutral-300: 203 213 225;
+    --color-neutral-400: 148 163 184;
+    --color-neutral-500: 100 116 139;
+    --color-neutral-600: 71 85 105;
+    --color-neutral-700: 51 65 85;
+    --color-neutral-800: 30 41 59;
+    --color-neutral-900: 15 23 42;
+
+    --color-success: 22 163 74;
+    --color-warning: 234 179 8;
+    --color-error: 220 38 38;
+
+    /* Semantic aliases */
+    --background: 244 247 251;
+    --foreground: 17 24 39;
+
+    --card: 255 255 255;
+    --card-foreground: 17 24 39;
+
+    --muted: 238 242 249;
+    --muted-foreground: 100 116 139;
+
+    --border: 226 232 240;
+    --ring: 61 101 161;
+
+    --radius: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-2xl: 1rem;
+  }
+
+  .dark {
+    --background: 15 23 42;
+    --foreground: 241 245 249;
+
+    --card: 17 24 39;
+    --card-foreground: 241 245 249;
+
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
+
+    --border: 31 41 55;
+    --ring: 76 126 214; /* lifted primary for dark */
+  }
+
+  * {
+    @apply border-neutral-200 dark:border-neutral-700;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  /* Focus visible for a11y */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-neutral-900;
+  }
+}
+
+/* ============== Component layer ============== */
+@layer components {
+  .container-narrow {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-wide {
+    @apply mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .heading-page {
+    @apply font-heading text-display-sm font-bold tracking-tight text-neutral-900 dark:text-white md:text-display-md;
+  }
+
+  .heading-section {
+    @apply font-heading text-2xl font-bold tracking-tight text-neutral-900 dark:text-white md:text-3xl;
+  }
+}
+
+/* ============== Utilities ============== */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
