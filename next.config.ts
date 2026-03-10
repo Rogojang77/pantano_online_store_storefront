@@ -2,6 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  /** Allow slower static page generation on constrained build environments (e.g. VPS) */
+  staticPageGenerationTimeout: 180,
   images: {
     remotePatterns: [
       {
