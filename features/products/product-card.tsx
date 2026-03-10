@@ -1,13 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import type { Product } from '@/types/api';
 import { siteConfig } from '@/config/site';
 import { Button, Badge, Stars } from '@/components/ui';
-import { useCartStore } from '@/store';
-import { useWishlistStore } from '@/store';
+import { useCartStore, useWishlistStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -26,6 +26,9 @@ const cartItemPayload = (product: Product, variant: NonNullable<Product['variant
 });
 
 export function ProductCard({ product, className }: ProductCardProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const addItem = useCartStore((s) => s.addItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const cartQty = useCartStore((s) => {
@@ -36,6 +39,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const hasWishlist = useWishlistStore((s) => s.has(product.id));
   const addWishlist = useWishlistStore((s) => s.add);
   const removeWishlist = useWishlistStore((s) => s.remove);
+  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
+  const setWishlistDrawerOpen = useUIStore((s) => s.setWishlistDrawerOpen);
+
+  // Avoid hydration mismatch: wishlist is from localStorage, so server always renders "not in wishlist"
+  const showWishlist = mounted && hasWishlist;
 
   const variant = product.variants?.[0];
   const price = variant?.price;
@@ -60,6 +68,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     e.stopPropagation();
     if (variant) {
       addItem({ ...cartItemPayload(product, variant, img), quantity: 1 });
+      setCartDrawerOpen(true);
     }
   };
 
@@ -68,6 +77,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     e.stopPropagation();
     if (variant) {
       addItem({ ...cartItemPayload(product, variant, img), quantity: 1 });
+      setCartDrawerOpen(true);
     }
   };
 
@@ -86,6 +96,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       removeWishlist(product.id);
     } else {
       addWishlist({ productId: product.id, addedAt: Date.now(), product });
+      setWishlistDrawerOpen(true);
     }
   };
 
@@ -120,10 +131,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
           type="button"
           onClick={toggleWishlist}
           className="absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow hover:bg-white dark:bg-neutral-800/90 dark:hover:bg-neutral-700"
-          aria-label={hasWishlist ? 'Elimină din lista de dorințe' : 'Adaugă la lista de dorințe'}
+          aria-label={showWishlist ? 'Elimină din lista de dorințe' : 'Adaugă la lista de dorințe'}
         >
           <Heart
-            className={cn('h-3.5 w-3.5', hasWishlist && 'fill-red-500 text-red-500')}
+            className={cn('h-3.5 w-3.5', showWishlist && 'fill-red-500 text-red-500')}
           />
         </button>
       </div>

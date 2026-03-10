@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Heart, ShoppingCart, Truck, MapPin } from 'lucide-react';
 import type { Product, ProductReviewsResponse, ProductQuestionItem } from '@/types/api';
@@ -17,8 +17,7 @@ import { ProductQASection } from './product-qa-section';
 import { ProductBadges } from './product-badges';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
-import { useCartStore } from '@/store';
-import { useWishlistStore } from '@/store';
+import { useCartStore, useWishlistStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
 
 interface ProductDetailClientProps {
@@ -48,12 +47,17 @@ export function ProductDetailClient({
     product.variants?.[0]?.id ?? null
   );
   const [quantity, setQuantity] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const ctaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => setMounted(true), []);
 
   const addItem = useCartStore((s) => s.addItem);
   const hasWishlist = useWishlistStore((s) => s.has(product.id));
   const addWishlist = useWishlistStore((s) => s.add);
   const removeWishlist = useWishlistStore((s) => s.remove);
+  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
+  const setWishlistDrawerOpen = useUIStore((s) => s.setWishlistDrawerOpen);
+  const showWishlist = mounted && hasWishlist;
 
   const variant =
     product.variants?.find((v) => v.id === selectedVariantId) ??
@@ -77,11 +81,15 @@ export function ProductDetailClient({
       sku: variant.sku,
       quantity,
     });
+    setCartDrawerOpen(true);
   };
 
   const toggleWishlist = () => {
     if (hasWishlist) removeWishlist(product.id);
-    else addWishlist({ productId: product.id, addedAt: Date.now(), product });
+    else {
+      addWishlist({ productId: product.id, addedAt: Date.now(), product });
+      setWishlistDrawerOpen(true);
+    }
   };
 
   const displaySku = variant?.sku ?? product.sku;
@@ -220,7 +228,7 @@ export function ProductDetailClient({
               size="icon-lg"
               onClick={toggleWishlist}
               aria-label={
-                hasWishlist
+                showWishlist
                   ? 'Elimină din lista de dorințe'
                   : 'Adaugă la lista de dorințe'
               }
@@ -228,7 +236,7 @@ export function ProductDetailClient({
               <Heart
                 className={cn(
                   'h-5 w-5',
-                  hasWishlist && 'fill-red-500 text-red-500'
+                  showWishlist && 'fill-red-500 text-red-500'
                 )}
               />
             </Button>

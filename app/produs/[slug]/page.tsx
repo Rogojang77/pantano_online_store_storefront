@@ -4,6 +4,8 @@ import { ProductDetailClient } from '@/features/products/product-detail-client';
 import type { Metadata } from 'next';
 import type { BreadcrumbItem } from '@/features/categories/category-breadcrumbs';
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

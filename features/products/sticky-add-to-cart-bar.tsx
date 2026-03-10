@@ -6,7 +6,7 @@ import { ShoppingCart } from 'lucide-react';
 import type { Product, ProductImage, ProductVariant } from '@/types/api';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
-import { useCartStore } from '@/store';
+import { useCartStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
 
 interface StickyAddToCartBarProps {
@@ -29,6 +29,7 @@ export function StickyAddToCartBar({
 }: StickyAddToCartBarProps) {
   const [visible, setVisible] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export function StickyAddToCartBar({
       sku: variant.sku,
       quantity,
     });
+    setCartDrawerOpen(true);
   };
 
   if (!visible) return null;

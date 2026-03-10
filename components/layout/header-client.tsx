@@ -4,10 +4,13 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Heart, User, ChevronDown } from 'lucide-react';
-import { useCartStore, useWishlistStore, useAuthStore } from '@/store';
+import { useCartStore, useWishlistStore, useAuthStore, useUIStore } from '@/store';
 import { getAuthToken } from '@/lib/api-client';
 import { authApi } from '@/lib/api';
 import { HeaderSearchTrigger } from '@/features/search/header-search-trigger';
+import { Sheet, SheetContent } from '@/components/ui';
+import { CartDrawerContent } from '@/components/cart/cart-drawer-content';
+import { WishlistDrawerContent } from '@/components/wishlist/wishlist-drawer-content';
 
 export function HeaderClient() {
   const router = useRouter();
@@ -18,6 +21,10 @@ export function HeaderClient() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
+  const cartDrawerOpen = useUIStore((s) => s.cartDrawerOpen);
+  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
+  const wishlistDrawerOpen = useUIStore((s) => s.wishlistDrawerOpen);
+  const setWishlistDrawerOpen = useUIStore((s) => s.setWishlistDrawerOpen);
   const [mounted, setMounted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -62,10 +69,12 @@ export function HeaderClient() {
   return (
     <nav className="flex items-center gap-1" aria-label="Acțiuni principale">
       <HeaderSearchTrigger className="lg:hidden" />
-      <Link
-        href="/wishlist"
+      <button
+        type="button"
+        onClick={() => setWishlistDrawerOpen(true)}
         className="relative flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
         aria-label={mounted ? `Lista de dorințe${wishlistCount > 0 ? `, ${wishlistCount} produse` : ''}` : 'Lista de dorințe'}
+        aria-expanded={wishlistDrawerOpen}
       >
         <Heart className="h-5 w-5" />
         {mounted && wishlistCount > 0 && (
@@ -73,11 +82,13 @@ export function HeaderClient() {
             {wishlistCount > 9 ? '9+' : wishlistCount}
           </span>
         )}
-      </Link>
-      <Link
-        href="/cart"
+      </button>
+      <button
+        type="button"
+        onClick={() => setCartDrawerOpen(true)}
         className="relative flex h-10 w-10 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
         aria-label={mounted ? `Coș${itemCount > 0 ? `, ${itemCount} produse` : ''}` : 'Coș'}
+        aria-expanded={cartDrawerOpen}
       >
         <ShoppingCart className="h-5 w-5" />
         {mounted && itemCount > 0 && (
@@ -85,7 +96,17 @@ export function HeaderClient() {
             {itemCount > 9 ? '9+' : itemCount}
           </span>
         )}
-      </Link>
+      </button>
+      <Sheet open={wishlistDrawerOpen} onOpenChange={setWishlistDrawerOpen}>
+        <SheetContent side="right" className="flex w-full max-w-sm flex-col p-0">
+          <WishlistDrawerContent onClose={() => setWishlistDrawerOpen(false)} />
+        </SheetContent>
+      </Sheet>
+      <Sheet open={cartDrawerOpen} onOpenChange={setCartDrawerOpen}>
+        <SheetContent side="right" className="flex w-full max-w-sm flex-col p-0">
+          <CartDrawerContent onClose={() => setCartDrawerOpen(false)} />
+        </SheetContent>
+      </Sheet>
       <div className="relative" ref={ref}>
         {isLoggedIn ? (
           <>

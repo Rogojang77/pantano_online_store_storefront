@@ -6,6 +6,8 @@ import { ContactForm } from '@/features/contact/contact-form';
 import { getContactInfo } from '@/lib/api/contact';
 import { siteConfig } from '@/config/site';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Contact',
   description: `Contactați-ne pentru informații despre produse, livrări și program. ${siteConfig.name} – ${siteConfig.description}`,

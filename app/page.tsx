@@ -7,6 +7,7 @@ import { TrustSection } from '@/features/home/trust-section';
 import { BrandsSection } from '@/features/home/brands-section';
 import { NewsletterSection } from '@/features/home/newsletter-section';
 
+export const dynamic = 'force-dynamic';
 export default async function HomePage() {
   const homeBlocks = await getBlocksByPlacement('home');
 

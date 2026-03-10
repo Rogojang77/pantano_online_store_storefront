@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useCartStore } from '@/store';
 import { Button, Input } from '@/components/ui';
+import { CartLineItem } from '@/components/cart/cart-line-item';
 import { siteConfig } from '@/config/site';
 import { promotionsApi, cartApi } from '@/lib/api/products';
 import { getAuthToken } from '@/lib/api-client';
@@ -102,68 +102,12 @@ export default function CartPage() {
       <div className="grid gap-8 lg:grid-cols-3">
         <ul className="space-y-4 lg:col-span-2">
           {items.map((item) => (
-            <li
+            <CartLineItem
               key={item.variantId}
-              className="flex gap-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800"
-            >
-              {item.imageUrl && (
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-700">
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.name ?? ''}
-                    fill
-                    className="object-cover"
-                    sizes="96px"
-                  />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                {item.slug ? (
-                  <Link
-                    href={`/produs/${item.slug}`}
-                    className="font-medium text-neutral-900 hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
-                  >
-                    {item.name}
-                  </Link>
-                ) : (
-                  <span className="font-medium text-neutral-900 dark:text-white">{item.name}</span>
-                )}
-                {item.price && (
-                  <p className="mt-1 text-sm font-semibold text-primary-600 dark:text-primary-400">
-                    {item.price} {siteConfig.currency}
-                  </p>
-                )}
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="flex items-center rounded border border-neutral-300 dark:border-neutral-600">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.variantId, Math.max(0, item.quantity - 1))}
-                      className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                      aria-label="Micșorează cantitatea"
-                    >
-                      −
-                    </button>
-                    <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                      className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                      aria-label="Mărește cantitatea"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeItem(item.variantId)}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400"
-                  >
-                    Elimină
-                  </Button>
-                </div>
-              </div>
-            </li>
+              item={item}
+              updateQuantity={updateQuantity}
+              removeItem={removeItem}
+            />
           ))}
         </ul>
         <div className="lg:col-span-1">

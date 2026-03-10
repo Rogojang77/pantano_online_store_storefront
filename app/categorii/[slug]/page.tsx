@@ -8,6 +8,8 @@ import { Suspense } from 'react';
 import { ProductGridSkeleton } from '@/features/products/product-grid-skeleton';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string; brandId?: string; sort?: string }>;

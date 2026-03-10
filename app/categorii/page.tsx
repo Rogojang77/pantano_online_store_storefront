@@ -3,6 +3,8 @@ import { categoriesApi } from '@/lib/api';
 import { Button } from '@/components/ui';
 import { CategoryBreadcrumbs } from '@/features/categories/category-breadcrumbs';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CategoriesIndexPage() {
   let roots: { id: string; name: string; slug: string }[] = [];
   try {
