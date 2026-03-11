@@ -7,7 +7,7 @@ export const siteConfig = {
   name: 'Pantano',
   description: 'Materiale de construcții și bricolaj – livrare și ridicare din magazin.',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3001',
-  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3002/api/v1',
+  apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1',
   defaultLocale: 'ro' as const,
   currency: 'RON',
   currencyCode: 'RON',
