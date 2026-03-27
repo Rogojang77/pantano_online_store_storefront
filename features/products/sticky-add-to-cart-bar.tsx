@@ -61,6 +61,7 @@ export function StickyAddToCartBar({
       slug: product.slug,
       price: variant.price,
       imageUrl: primaryImage?.url,
+      ean: variant.ean ?? variant.sku,
       sku: variant.sku,
       quantity,
     });

@@ -14,6 +14,7 @@ export interface LocalCartItem {
   slug?: string;
   price?: string;
   imageUrl?: string;
+  ean?: string;
   sku?: string;
 }
 

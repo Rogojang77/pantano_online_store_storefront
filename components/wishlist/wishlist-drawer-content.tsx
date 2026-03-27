@@ -50,6 +50,7 @@ function WishlistDrawerRow({ item, onClose }: WishlistDrawerRowProps) {
         slug: product.slug,
         price: variant.price,
         imageUrl: img?.url,
+        ean: variant.ean ?? variant.sku,
         sku: variant.sku,
       }
     : null;

@@ -28,7 +28,7 @@ type ProductsQuery = {
   brandId?: string;
   attributeValueIds?: string[];
   status?: string;
-  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'sku';
+  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'ean' | 'sku';
   sortDir?: 'asc' | 'desc';
 };
 

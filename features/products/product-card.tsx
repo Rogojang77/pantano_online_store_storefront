@@ -22,6 +22,7 @@ const cartItemPayload = (product: Product, variant: NonNullable<Product['variant
   slug: product.slug,
   price: variant.price,
   imageUrl: img?.url,
+  ean: variant.ean ?? variant.sku,
   sku: variant.sku,
 });
 

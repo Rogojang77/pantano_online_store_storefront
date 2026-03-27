@@ -84,6 +84,7 @@ export interface ProductImage {
 export interface ProductVariant {
   id: string;
   productId: string;
+  ean: string | null;
   sku: string;
   name: string | null;
   price: string;
@@ -108,6 +109,7 @@ export interface ProductDocument {
 // --- Product (list + detail) ---
 export interface Product {
   id: string;
+  ean: string | null;
   sku: string;
   name: string;
   slug: string;
@@ -283,7 +285,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: string;
   totalPrice: string;
-  variant?: { sku?: string; name?: string; product?: { name: string; slug?: string } };
+  variant?: { ean?: string; sku?: string; name?: string; product?: { name: string; slug?: string } };
 }
 
 export interface Order {

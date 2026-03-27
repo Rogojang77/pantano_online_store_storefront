@@ -78,6 +78,7 @@ export function ProductDetailClient({
       slug: product.slug,
       price: variant.price,
       imageUrl: primaryImage?.url,
+      ean: variant.ean ?? variant.sku,
       sku: variant.sku,
       quantity,
     });
@@ -92,7 +93,7 @@ export function ProductDetailClient({
     }
   };
 
-  const displaySku = variant?.sku ?? product.sku;
+  const displayEan = variant?.ean ?? product.ean ?? variant?.sku ?? product.sku;
   const productUrl = `${siteConfig.url.replace(/\/$/, '')}/produs/${product.slug}`;
 
   return (
@@ -128,9 +129,9 @@ export function ProductDetailClient({
         <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-900 dark:text-white md:text-3xl">
           {product.name}
         </h1>
-          {displaySku && (
+          {displayEan && (
             <p className="mt-1 text-sm text-neutral-500">
-              SKU: {displaySku}
+              EAN: {displayEan}
             </p>
           )}
 
@@ -176,7 +177,7 @@ export function ProductDetailClient({
                     size="sm"
                     onClick={() => setSelectedVariantId(v.id)}
                   >
-                    {v.name ?? v.sku}
+                    {v.name ?? v.ean ?? v.sku}
                   </Button>
                 ))}
               </div>
