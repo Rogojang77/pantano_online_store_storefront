@@ -16,6 +16,13 @@ const STATUS_LABELS: Record<string, string> = {
   CANCELLED: 'Anulată',
 };
 
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'În așteptare',
+  PAID: 'Confirmată',
+  FAILED: 'Eșuată',
+  REFUNDED: 'Rambursată',
+};
+
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -39,9 +46,12 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (!order?.id) return;
     const orderId = order.id;
+    setInvoiceId(null);
     invoicesApi.list({ limit: 100 })
       .then((res) => {
-        const inv = res.data.find((i: { orderId: string }) => i.orderId === orderId);
+        const inv = res.data.find((i: { orderId: string; odooInvoiceId?: string | null }) =>
+          i.orderId === orderId && Boolean(i.odooInvoiceId)
+        );
         if (inv) setInvoiceId(inv.id);
       })
       .catch(() => {});
@@ -141,6 +151,7 @@ export default function OrderDetailPage() {
 
       <div className="rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
         <p><span className="font-medium">Status:</span> {STATUS_LABELS[order.status] ?? order.status}</p>
+        <p><span className="font-medium">Plată:</span> {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}</p>
         <p><span className="font-medium">Data:</span> {new Date(order.createdAt).toLocaleString('ro-RO')}</p>
         <p><span className="font-medium">Tip:</span> {order.type === 'DELIVERY' ? 'Livrare' : 'Ridicare din magazin'}</p>
         {order.addressLine1 && (
@@ -176,7 +187,8 @@ export default function OrderDetailPage() {
 
       {!invoiceId && (
         <p className="text-sm text-neutral-500">
-          Pentru factură, accesează secțiunea <Link href="/cont/facturi" className="text-primary-600 hover:underline dark:text-primary-400">Facturi</Link>.
+          Factura se poate descărca doar după ce este disponibilă în Odoo. Verifică secțiunea{' '}
+          <Link href="/cont/facturi" className="text-primary-600 hover:underline dark:text-primary-400">Facturi</Link>.
         </p>
       )}
     </div>

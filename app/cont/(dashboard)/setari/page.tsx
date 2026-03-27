@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/store';
 import { Button } from '@/components/ui';
@@ -34,13 +35,15 @@ type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 export default function AccountSettingsPage() {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -53,52 +56,40 @@ export default function AccountSettingsPage() {
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined' || token) return;
+    if (typeof window === 'undefined' || user) return;
     const redirect = encodeURIComponent('/cont/setari');
     router.replace(`/cont?redirect=${redirect}`);
-  }, [token, router]);
+  }, [user, router]);
 
   useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    authApi.profile()
-      .then((profile) => {
-        if (cancelled) return;
-        setAuth(token, {
-          id: profile.id,
-          email: profile.email,
-          firstName: profile.firstName ?? null,
-          lastName: profile.lastName ?? null,
-        });
-        profileForm.reset({
-          firstName: profile.firstName ?? '',
-          lastName: profile.lastName ?? '',
-          phone: profile.phone ?? '',
-        });
-      })
-      .catch(() => {
-        if (!cancelled) router.replace('/cont');
-      });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once when token is available
-  }, [token]);
+    if (!user) return;
+    profileForm.reset({
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      phone: user.phone ?? '',
+    });
+  }, [user, profileForm]);
 
   const onProfileSubmit = async (data: ProfileForm) => {
     setProfileError(null);
     setProfileSuccess(false);
-    const t = useAuthStore.getState().token;
-    if (!t) return;
+    if (!user) return;
     try {
       const updated = await authApi.updateProfile({
         firstName: data.firstName || undefined,
         lastName: data.lastName || undefined,
         phone: data.phone || undefined,
       });
-      setAuth(t, {
+      setAuth({
         id: updated.id,
         email: updated.email,
         firstName: updated.firstName ?? null,
         lastName: updated.lastName ?? null,
+        phone: updated.phone ?? null,
+        accountType: updated.accountType,
+        companyName: updated.companyName ?? null,
+        companyVatId: updated.companyVatId ?? null,
+        companyTradeRegister: updated.companyTradeRegister ?? null,
       });
       setProfileSuccess(true);
     } catch {
@@ -118,7 +109,7 @@ export default function AccountSettingsPage() {
     }
   };
 
-  if (typeof window !== 'undefined' && !token) {
+  if (typeof window !== 'undefined' && !user) {
     return null;
   }
 
@@ -175,13 +166,23 @@ export default function AccountSettingsPage() {
           )}
           <div>
             <Label htmlFor="currentPassword">Parola curentă</Label>
-            <Input
-              id="currentPassword"
-              type="password"
-              autoComplete="current-password"
-              className="mt-1"
-              {...passwordForm.register('currentPassword')}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="currentPassword"
+                type={showCurrentPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                className="pr-10"
+                {...passwordForm.register('currentPassword')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                aria-label={showCurrentPassword ? 'Ascunde parola' : 'Arată parola'}
+              >
+                {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             {passwordForm.formState.errors.currentPassword && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {passwordForm.formState.errors.currentPassword.message}
@@ -190,13 +191,23 @@ export default function AccountSettingsPage() {
           </div>
           <div>
             <Label htmlFor="newPassword">Parolă nouă</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              autoComplete="new-password"
-              className="mt-1"
-              {...passwordForm.register('newPassword')}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="newPassword"
+                type={showNewPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                className="pr-10"
+                {...passwordForm.register('newPassword')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                aria-label={showNewPassword ? 'Ascunde parola' : 'Arată parola'}
+              >
+                {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             {passwordForm.formState.errors.newPassword && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {passwordForm.formState.errors.newPassword.message}
@@ -205,13 +216,23 @@ export default function AccountSettingsPage() {
           </div>
           <div>
             <Label htmlFor="confirmPassword">Confirmă parola nouă</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              className="mt-1"
-              {...passwordForm.register('confirmPassword')}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                className="pr-10"
+                {...passwordForm.register('confirmPassword')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                aria-label={showConfirmPassword ? 'Ascunde parola' : 'Arată parola'}
+              >
+                {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
             {passwordForm.formState.errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {passwordForm.formState.errors.confirmPassword.message}

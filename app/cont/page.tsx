@@ -6,13 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi, wishlistApi } from '@/lib/api';
 import { useAuthStore, useWishlistStore } from '@/store';
-import { getAuthToken } from '@/lib/api-client';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { Label } from '@/components/ui';
-import { siteConfig } from '@/config/site';
 
 const loginSchema = z.object({
   email: z.string().email('Email invalid'),
@@ -24,11 +23,11 @@ type LoginForm = z.infer<typeof loginSchema>;
 function AccountHubContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const resetSuccess = searchParams.get('reset') === 'success';
 
   const {
@@ -41,40 +40,48 @@ function AccountHubContent() {
   });
 
   useEffect(() => {
-    if (token && user) {
+    if (user) {
       const redirect = searchParams.get('redirect') || '/cont/dashboard';
       router.replace(redirect);
       return;
     }
-    const storedToken = typeof window !== 'undefined' ? getAuthToken() : null;
-    if (storedToken && !token) {
-      authApi.profile()
-        .then((profile) => {
-          setAuth(storedToken, {
-            id: profile.id,
-            email: profile.email,
-            firstName: profile.firstName ?? null,
-            lastName: profile.lastName ?? null,
-          });
-        })
-        .catch(() => {});
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from localStorage
-  }, [token, user, router, searchParams]);
+    authApi
+      .profile()
+      .then((profile) => {
+        setAuth({
+          id: profile.id,
+          email: profile.email,
+          firstName: profile.firstName ?? null,
+          lastName: profile.lastName ?? null,
+          phone: profile.phone ?? null,
+          accountType: profile.accountType,
+          companyName: profile.companyName ?? null,
+          companyVatId: profile.companyVatId ?? null,
+          companyTradeRegister: profile.companyTradeRegister ?? null,
+        });
+      })
+      .catch(() => {});
+  }, [user, router, searchParams, setAuth]);
 
   const onSubmit = async (data: LoginForm) => {
     setError(null);
     try {
       const res = await authApi.login(data.email, data.password);
-      const accessToken = res.accessToken ?? res.access_token ?? '';
-      setAuth(accessToken, res.user ?? { id: '', email: data.email, firstName: null, lastName: null });
-      if (typeof window !== 'undefined' && accessToken) {
-        localStorage.setItem(siteConfig.authTokenKey, accessToken);
-        const localItems = useWishlistStore.getState().items;
-        const variantIds = localItems.filter((i) => i.variantId).map((i) => i.variantId as string);
-        if (variantIds.length > 0) {
-          wishlistApi.sync(variantIds).catch(() => {});
-        }
+      setAuth({
+        id: res.user?.id ?? '',
+        email: res.user?.email ?? data.email,
+        firstName: res.user?.firstName ?? null,
+        lastName: res.user?.lastName ?? null,
+        phone: res.user?.phone ?? null,
+        accountType: res.user?.accountType,
+        companyName: res.user?.companyName ?? null,
+        companyVatId: res.user?.companyVatId ?? null,
+        companyTradeRegister: res.user?.companyTradeRegister ?? null,
+      });
+      const localItems = useWishlistStore.getState().items;
+      const variantIds = localItems.filter((i) => i.variantId).map((i) => i.variantId as string);
+      if (variantIds.length > 0) {
+        wishlistApi.sync(variantIds).catch(() => {});
       }
       const redirect = searchParams.get('redirect') || '/cont/dashboard';
       router.push(redirect);
@@ -88,12 +95,13 @@ function AccountHubContent() {
   };
 
   const handleLogout = () => {
+    authApi.logout().catch(() => {});
     logout();
     router.push('/');
     router.refresh();
   };
 
-  if (token && user) {
+  if (user) {
     return (
       <div className="container-narrow mx-auto max-w-md py-16">
         <h1 className="heading-page mb-8 text-center">Contul meu</h1>
@@ -148,13 +156,23 @@ function AccountHubContent() {
         </div>
         <div>
           <Label htmlFor="password">Parolă</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            className="mt-1"
-            {...register('password')}
-          />
+          <div className="relative mt-1">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              className="pr-10"
+              {...register('password')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              aria-label={showPassword ? 'Ascunde parola' : 'Arată parola'}
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
           )}

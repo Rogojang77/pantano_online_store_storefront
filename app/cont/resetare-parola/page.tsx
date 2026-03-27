@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
@@ -29,6 +30,8 @@ function ResetPasswordContent() {
   const token = searchParams.get('token');
   const [error, setError] = useState<string | null>(null);
   const [invalidToken, setInvalidToken] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -94,26 +97,46 @@ function ResetPasswordContent() {
         )}
         <div>
           <Label htmlFor="newPassword">Parolă nouă *</Label>
-          <Input
-            id="newPassword"
-            type="password"
-            autoComplete="new-password"
-            className="mt-1"
-            {...register('newPassword')}
-          />
+          <div className="relative mt-1">
+            <Input
+              id="newPassword"
+              type={showNewPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              className="pr-10"
+              {...register('newPassword')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              aria-label={showNewPassword ? 'Ascunde parola' : 'Arată parola'}
+            >
+              {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
           {errors.newPassword && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.newPassword.message}</p>
           )}
         </div>
         <div>
           <Label htmlFor="confirmPassword">Confirmă parola *</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            className="mt-1"
-            {...register('confirmPassword')}
-          />
+          <div className="relative mt-1">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              className="pr-10"
+              {...register('confirmPassword')}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              aria-label={showConfirmPassword ? 'Ascunde parola' : 'Arată parola'}
+            >
+              {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
           {errors.confirmPassword && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
           )}

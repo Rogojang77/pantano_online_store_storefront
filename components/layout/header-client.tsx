@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Heart, User, ChevronDown } from 'lucide-react';
 import { useCartStore, useWishlistStore, useAuthStore, useUIStore } from '@/store';
-import { getAuthToken } from '@/lib/api-client';
 import { authApi } from '@/lib/api';
 import { HeaderSearchTrigger } from '@/features/search/header-search-trigger';
 import { Sheet, SheetContent } from '@/components/ui';
@@ -16,7 +15,6 @@ export function HeaderClient() {
   const router = useRouter();
   const itemCount = useCartStore((s) => s.itemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
-  const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
@@ -33,21 +31,24 @@ export function HeaderClient() {
   }, []);
 
   useEffect(() => {
-    const storedToken = getAuthToken();
-    if (storedToken && !token) {
+    if (!user) {
       authApi.profile()
         .then((profile) => {
-          setAuth(storedToken, {
+          setAuth({
             id: profile.id,
             email: profile.email,
             firstName: profile.firstName ?? null,
             lastName: profile.lastName ?? null,
+            phone: profile.phone ?? null,
+            accountType: profile.accountType,
+            companyName: profile.companyName ?? null,
+            companyVatId: profile.companyVatId ?? null,
+            companyTradeRegister: profile.companyTradeRegister ?? null,
           });
         })
         .catch(() => {});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate auth once on mount
-  }, []);
+  }, [user, setAuth]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -59,12 +60,13 @@ export function HeaderClient() {
 
   const handleLogout = () => {
     setOpen(false);
+    authApi.logout().catch(() => {});
     logout();
     router.push('/');
     router.refresh();
   };
 
-  const isLoggedIn = !!token && !!user;
+  const isLoggedIn = !!user;
 
   return (
     <nav className="flex items-center gap-1" aria-label="Acțiuni principale">

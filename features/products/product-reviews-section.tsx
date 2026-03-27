@@ -28,10 +28,10 @@ export function ProductReviewsSection({
   const [formRating, setFormRating] = useState(5);
   const [formTitle, setFormTitle] = useState('');
   const [formBody, setFormBody] = useState('');
-  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
 
   const { data: reviews, summary } = reviewsData;
-  const isLoggedIn = !!token;
+  const isLoggedIn = !!user;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

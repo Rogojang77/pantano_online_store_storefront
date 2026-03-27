@@ -1,10 +1,10 @@
 /**
  * Account-area API: orders, addresses, invoices, saved carts.
- * All require JWT (getAuthToken).
+ * Uses cookie-based session auth where required.
  */
 
 import type { PaginatedResult, Order, Address, Invoice, SavedCart } from '@/types/api';
-import { api, getAuthToken } from '@/lib/api-client';
+import { api } from '@/lib/api-client';
 import { siteConfig } from '@/config/site';
 
 type OrdersMyParams = { page?: number; limit?: number; status?: string; from?: string; to?: string; search?: string };
@@ -28,12 +28,23 @@ export type CreateOrderPayload = {
   items: { variantId: string; quantity: number }[];
   shippingAddressId?: string;
   billingAddressId?: string;
+  accountType?: 'INDIVIDUAL' | 'COMPANY';
+  companyName?: string;
+  companyVatId?: string;
+  companyTradeRegister?: string;
+  billingSameAsShipping?: boolean;
   addressLine1?: string;
   addressLine2?: string;
   city?: string;
   county?: string;
   postalCode?: string;
   country?: string;
+  billingAddressLine1?: string;
+  billingAddressLine2?: string;
+  billingCity?: string;
+  billingCounty?: string;
+  billingPostalCode?: string;
+  billingCountry?: string;
   notes?: string;
   promotionId?: string;
   discountAmount?: number;
@@ -49,7 +60,6 @@ export type CreateOrderPayload = {
 
 export const ordersApi = {
   my: (params?: OrdersMyParams) => {
-    const token = getAuthToken();
     const search = new URLSearchParams();
     if (params?.page != null) search.set('page', String(params.page));
     if (params?.limit != null) search.set('limit', String(params.limit));
@@ -58,76 +68,43 @@ export const ordersApi = {
     if (params?.to) search.set('to', params.to);
     if (params?.search) search.set('search', params.search);
     const q = search.toString();
-    return api.get<PaginatedResult<Order>>(q ? `/orders/my?${q}` : '/orders/my', token);
+    return api.get<PaginatedResult<Order>>(q ? `/orders/my?${q}` : '/orders/my');
   },
   byId: (id: string, guestEmail?: string) => {
-    const token = getAuthToken();
     const url = guestEmail
       ? `/orders/${id}?guestEmail=${encodeURIComponent(guestEmail)}`
       : `/orders/${id}`;
-    return api.get<Order>(url, token);
+    return api.get<Order>(url);
   },
-  create: (payload: CreateOrderPayload) => {
-    const token = getAuthToken();
-    return api.post<Order>('/orders', payload, token ?? undefined);
-  },
-  reorder: (orderId: string) => {
-    const token = getAuthToken();
-    return api.post<unknown>(`/orders/${orderId}/reorder`, undefined, token);
-  },
+  create: (payload: CreateOrderPayload) => api.post<Order>('/orders', payload),
+  reorder: (orderId: string) => api.post<unknown>(`/orders/${orderId}/reorder`),
 };
 
 export const addressesApi = {
-  list: () => {
-    const token = getAuthToken();
-    return api.get<Address[]>('/addresses', token);
-  },
-  byId: (id: string) => {
-    const token = getAuthToken();
-    return api.get<Address>(`/addresses/${id}`, token);
-  },
-  create: (data: CreateAddressPayload) => {
-    const token = getAuthToken();
-    return api.post<Address>('/addresses', data, token);
-  },
-  update: (id: string, data: Partial<CreateAddressPayload>) => {
-    const token = getAuthToken();
-    return api.patch<Address>(`/addresses/${id}`, data, token);
-  },
-  setDefaultShipping: (id: string) => {
-    const token = getAuthToken();
-    return api.put<Address>(`/addresses/${id}/default-shipping`, undefined, token);
-  },
-  setDefaultBilling: (id: string) => {
-    const token = getAuthToken();
-    return api.put<Address>(`/addresses/${id}/default-billing`, undefined, token);
-  },
-  delete: (id: string) => {
-    const token = getAuthToken();
-    return api.delete<unknown>(`/addresses/${id}`, token);
-  },
+  list: () => api.get<Address[]>('/addresses'),
+  byId: (id: string) => api.get<Address>(`/addresses/${id}`),
+  create: (data: CreateAddressPayload) => api.post<Address>('/addresses', data),
+  update: (id: string, data: Partial<CreateAddressPayload>) => api.patch<Address>(`/addresses/${id}`, data),
+  setDefaultShipping: (id: string) => api.put<Address>(`/addresses/${id}/default-shipping`),
+  setDefaultBilling: (id: string) => api.put<Address>(`/addresses/${id}/default-billing`),
+  delete: (id: string) => api.delete<unknown>(`/addresses/${id}`),
 };
 
 export const invoicesApi = {
   list: (params?: InvoicesListParams) => {
-    const token = getAuthToken();
     const search = new URLSearchParams();
     if (params?.page != null) search.set('page', String(params.page));
     if (params?.limit != null) search.set('limit', String(params.limit));
     const q = search.toString();
-    return api.get<PaginatedResult<Invoice>>(q ? `/invoices?${q}` : '/invoices', token);
+    return api.get<PaginatedResult<Invoice>>(q ? `/invoices?${q}` : '/invoices');
   },
-  byId: (id: string) => {
-    const token = getAuthToken();
-    return api.get<Invoice>(`/invoices/${id}`, token);
-  },
+  byId: (id: string) => api.get<Invoice>(`/invoices/${id}`),
   /** Fetch PDF as blob (use with createObjectURL or trigger download) */
   download: async (id: string): Promise<Blob> => {
-    const token = getAuthToken();
     const base = siteConfig.apiUrl;
     const url = `${base}/invoices/${id}/download`;
     const res = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: 'include',
     });
     if (!res.ok) throw new Error('Download failed');
     return res.blob();
@@ -146,18 +123,9 @@ export interface ReturnRequest {
 }
 
 export const returnsApi = {
-  list: () => {
-    const token = getAuthToken();
-    return api.get<ReturnRequest[]>('/returns', token);
-  },
-  byId: (id: string) => {
-    const token = getAuthToken();
-    return api.get<ReturnRequest>(`/returns/${id}`, token);
-  },
-  create: (data: { orderId: string; reason?: string; notes?: string }) => {
-    const token = getAuthToken();
-    return api.post<ReturnRequest>('/returns', data, token);
-  },
+  list: () => api.get<ReturnRequest[]>('/returns'),
+  byId: (id: string) => api.get<ReturnRequest>(`/returns/${id}`),
+  create: (data: { orderId: string; reason?: string; notes?: string }) => api.post<ReturnRequest>('/returns', data),
 };
 
 export interface WishlistItemResponse {
@@ -168,51 +136,18 @@ export interface WishlistItemResponse {
 }
 
 export const wishlistApi = {
-  list: () => {
-    const token = getAuthToken();
-    return api.get<WishlistItemResponse[]>('/wishlist', token);
-  },
-  add: (variantId: string) => {
-    const token = getAuthToken();
-    return api.post<WishlistItemResponse>('/wishlist/items', { variantId }, token);
-  },
-  remove: (variantId: string) => {
-    const token = getAuthToken();
-    return api.delete<{ removed: boolean }>(`/wishlist/items/${variantId}`, token);
-  },
-  sync: (variantIds: string[]) => {
-    const token = getAuthToken();
-    return api.post<WishlistItemResponse[]>('/wishlist/sync', { variantIds }, token);
-  },
+  list: () => api.get<WishlistItemResponse[]>('/wishlist'),
+  add: (variantId: string) => api.post<WishlistItemResponse>('/wishlist/items', { variantId }),
+  remove: (variantId: string) => api.delete<{ removed: boolean }>(`/wishlist/items/${variantId}`),
+  sync: (variantIds: string[]) => api.post<WishlistItemResponse[]>('/wishlist/sync', { variantIds }),
 };
 
 export const savedCartsApi = {
-  list: () => {
-    const token = getAuthToken();
-    return api.get<SavedCart[]>('/saved-carts', token);
-  },
-  byId: (id: string) => {
-    const token = getAuthToken();
-    return api.get<SavedCart>(`/saved-carts/${id}`, token);
-  },
-  create: (data: { name: string; description?: string }) => {
-    const token = getAuthToken();
-    return api.post<SavedCart>('/saved-carts', data, token);
-  },
-  update: (id: string, data: { name?: string; description?: string }) => {
-    const token = getAuthToken();
-    return api.patch<SavedCart>(`/saved-carts/${id}`, data, token);
-  },
-  loadIntoCart: (id: string) => {
-    const token = getAuthToken();
-    return api.post<unknown>(`/saved-carts/${id}/load`, undefined, token);
-  },
-  duplicate: (id: string, name?: string) => {
-    const token = getAuthToken();
-    return api.post<SavedCart>(`/saved-carts/${id}/duplicate`, name != null ? { name } : {}, token);
-  },
-  delete: (id: string) => {
-    const token = getAuthToken();
-    return api.delete<unknown>(`/saved-carts/${id}`, token);
-  },
+  list: () => api.get<SavedCart[]>('/saved-carts'),
+  byId: (id: string) => api.get<SavedCart>(`/saved-carts/${id}`),
+  create: (data: { name: string; description?: string }) => api.post<SavedCart>('/saved-carts', data),
+  update: (id: string, data: { name?: string; description?: string }) => api.patch<SavedCart>(`/saved-carts/${id}`, data),
+  loadIntoCart: (id: string) => api.post<unknown>(`/saved-carts/${id}/load`),
+  duplicate: (id: string, name?: string) => api.post<SavedCart>(`/saved-carts/${id}/duplicate`, name != null ? { name } : {}),
+  delete: (id: string) => api.delete<unknown>(`/saved-carts/${id}`),
 };

@@ -16,63 +16,59 @@ import type {
   CartItem,
   LoginResponse,
   User,
+  CategoryEffectiveAttribute,
 } from '@/types/api';
-import { api, getAuthToken } from '@/lib/api-client';
-import { getMockProductBySlug, getMockProductsList } from '@/lib/mock/products';
+import { api } from '@/lib/api-client';
 
 type ProductsQuery = {
   page?: number;
   limit?: number;
   categoryId?: string;
+  includeDescendants?: boolean;
   brandId?: string;
+  attributeValueIds?: string[];
   status?: string;
   sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'sku';
   sortDir?: 'asc' | 'desc';
 };
 
-function mockListResult(params: ProductsQuery): PaginatedResult<Product> {
-  const limit = params.limit ?? 24;
-  const list = getMockProductsList();
-  return {
-    data: list,
-    meta: {
-      total: list.length,
-      page: params.page ?? 1,
-      limit,
-      totalPages: 1,
-      hasNext: false,
-      hasPrev: false,
-    },
-  };
-}
-
 export const productsApi = {
   async list(params: ProductsQuery = {}): Promise<PaginatedResult<Product>> {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 24;
+
     const search = new URLSearchParams();
     if (params.page != null) search.set('page', String(params.page));
     if (params.limit != null) search.set('limit', String(params.limit));
     if (params.categoryId) search.set('categoryId', params.categoryId);
+    if (params.includeDescendants != null) search.set('includeDescendants', String(params.includeDescendants));
     if (params.brandId) search.set('brandId', params.brandId);
+    if (params.attributeValueIds?.length) {
+      search.set('attributeValueIds', params.attributeValueIds.join(','));
+    }
     if (params.status) search.set('status', params.status);
     if (params.sortBy) search.set('sortBy', params.sortBy);
     if (params.sortDir) search.set('sortDir', params.sortDir);
     const q = search.toString();
     try {
-      const result = await api.get<PaginatedResult<Product>>(q ? `/products?${q}` : '/products');
-      if (result.data.length > 0) return result;
+      return await api.get<PaginatedResult<Product>>(q ? `/products?${q}` : '/products');
     } catch {
-      // API error or empty – use mock
+      // No mock fallback: return an empty list on API failure.
+      return {
+        data: [],
+        meta: {
+          total: 0,
+          page,
+          limit,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      };
     }
-    return mockListResult(params);
   },
   async bySlug(slug: string): Promise<Product> {
-    try {
-      return await api.get<Product>(`/products/slug/${encodeURIComponent(slug)}`);
-    } catch (err) {
-      const mock = getMockProductBySlug(slug);
-      if (mock) return mock;
-      throw err;
-    }
+    return api.get<Product>(`/products/slug/${encodeURIComponent(slug)}`);
   },
   async related(productId: string, limit = 8): Promise<Product[]> {
     try {
@@ -99,8 +95,7 @@ export const productsApi = {
     productId: string,
     payload: { rating: number; title?: string; body?: string }
   ) {
-    const token = getAuthToken();
-    return api.post<{ id: string }>(`/products/${productId}/reviews`, payload, token);
+    return api.post<{ id: string }>(`/products/${productId}/reviews`, payload);
   },
   async questions(productId: string, limit = 50): Promise<ProductQuestionItem[]> {
     try {
@@ -110,15 +105,12 @@ export const productsApi = {
     }
   },
   createQuestion(productId: string, question: string) {
-    const token = getAuthToken();
-    return api.post<{ id: string }>(`/products/${productId}/questions`, { question }, token);
+    return api.post<{ id: string }>(`/products/${productId}/questions`, { question });
   },
   createAnswer(productId: string, questionId: string, answer: string) {
-    const token = getAuthToken();
     return api.post<{ id: string }>(
       `/products/${productId}/questions/${questionId}/answers`,
-      { answer },
-      token
+      { answer }
     );
   },
 };
@@ -128,6 +120,10 @@ export const categoriesApi = {
   roots: () => api.get<Category[]>('/categories/roots'),
   bySlug: (slug: string) =>
     api.get<Category>(`/categories/slug/${encodeURIComponent(slug)}`),
+  effectiveAttributes: (categoryId: string) =>
+    api.get<CategoryEffectiveAttribute[]>(
+      `/attributes/category/${encodeURIComponent(categoryId)}/effective`,
+    ),
 };
 
 export const brandsApi = {
@@ -181,22 +177,41 @@ export const authApi = {
     firstName?: string;
     lastName?: string;
     phone?: string;
+    accountType?: 'INDIVIDUAL' | 'COMPANY';
+    companyName?: string;
+    companyVatId?: string;
+    companyTradeRegister?: string;
+    billingAddressLine1?: string;
+    billingAddressLine2?: string;
+    billingCity?: string;
+    billingCounty?: string;
+    billingPostalCode?: string;
+    billingCountry?: string;
   }) => api.post<LoginResponse>('/auth/register', payload),
   profile: () => {
-    const token = getAuthToken();
-    return api.get<User>('/auth/profile', token);
+    return api.get<User>('/auth/profile');
   },
-  updateProfile: (payload: { firstName?: string; lastName?: string; phone?: string; newsletterConsent?: boolean; notifyOrderStatus?: boolean; language?: string }) => {
-    const token = getAuthToken();
-    return api.patch<User>('/auth/profile', payload, token);
+  updateProfile: (payload: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    accountType?: 'INDIVIDUAL' | 'COMPANY';
+    companyName?: string;
+    companyVatId?: string;
+    companyTradeRegister?: string;
+    newsletterConsent?: boolean;
+    notifyOrderStatus?: boolean;
+    language?: string;
+  }) => {
+    return api.patch<User>('/auth/profile', payload);
   },
   changePassword: (currentPassword: string, newPassword: string) => {
-    const token = getAuthToken();
     return api.post<{ message: string }>('/auth/change-password', {
       currentPassword,
       newPassword,
-    }, token);
+    });
   },
+  logout: () => api.post<{ message: string }>('/auth/logout'),
   forgotPassword: (email: string) =>
     api.post<{ message: string }>('/auth/forgot-password', { email }),
   resetPassword: (token: string, newPassword: string) =>
@@ -204,30 +219,12 @@ export const authApi = {
 };
 
 export const cartApi = {
-  get: () => {
-    const token = getAuthToken();
-    return api.get<Cart>('/cart', token);
-  },
-  addItem: (variantId: string, quantity: number) => {
-    const token = getAuthToken();
-    return api.post<Cart>('/cart/items', { variantId, quantity }, token);
-  },
-  updateItem: (variantId: string, quantity: number) => {
-    const token = getAuthToken();
-    return api.put<Cart>(`/cart/items/${variantId}`, { quantity }, token);
-  },
-  removeItem: (variantId: string) => {
-    const token = getAuthToken();
-    return api.delete<Cart>(`/cart/items/${variantId}`, token);
-  },
-  applyCoupon: (code: string) => {
-    const token = getAuthToken();
-    return api.post<Cart>('/cart/coupon', { code }, token);
-  },
-  removeCoupon: () => {
-    const token = getAuthToken();
-    return api.delete<Cart>('/cart/coupon', token);
-  },
+  get: () => api.get<Cart>('/cart'),
+  addItem: (variantId: string, quantity: number) => api.post<Cart>('/cart/items', { variantId, quantity }),
+  updateItem: (variantId: string, quantity: number) => api.put<Cart>(`/cart/items/${variantId}`, { quantity }),
+  removeItem: (variantId: string) => api.delete<Cart>(`/cart/items/${variantId}`),
+  applyCoupon: (code: string) => api.post<Cart>('/cart/coupon', { code }),
+  removeCoupon: () => api.delete<Cart>('/cart/coupon'),
 };
 
 export interface ValidateCouponResult {

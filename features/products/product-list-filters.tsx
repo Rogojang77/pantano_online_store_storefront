@@ -24,19 +24,20 @@ interface ProductListFiltersProps {
 }
 
 export function ProductListFilters({
-  defaultCategoryId,
   defaultBrandId,
-  currentCategorySlug,
   currentCategoryChildren,
 }: ProductListFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const hasSubcategories = (currentCategoryChildren?.length ?? 0) > 0;
+  const selectedCategoryIdFromQuery = searchParams.get('categoryId');
+  const currentCategorySlug = pathname.split('/').filter(Boolean).pop();
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories', 'tree'],
     queryFn: () => categoriesApi.tree(),
-    enabled: !currentCategoryChildren,
+    enabled: !hasSubcategories,
   });
 
   const { data: brands = [] } = useQuery({
@@ -44,9 +45,9 @@ export function ProductListFilters({
     queryFn: () => brandsApi.list(),
   });
 
-  const displayCategories = currentCategoryChildren && currentCategoryChildren.length > 0
-    ? currentCategoryChildren
-    : (categories as Category[]).filter(c => !c.parentId).slice(0, 20);
+  const displayCategories = hasSubcategories
+    ? currentCategoryChildren ?? []
+    : (categories as Category[]).filter((c) => !c.parentId).slice(0, 20);
 
   const setFilter = (key: 'categoryId' | 'brandId', value: string | null) => {
     const next = new URLSearchParams(searchParams.toString());
@@ -61,17 +62,17 @@ export function ProductListFilters({
       {displayCategories.length > 0 && (
         <div>
           <h3 className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
-            {currentCategoryChildren && currentCategoryChildren.length > 0 ? 'Subcategorii' : 'Categorie'}
+            {hasSubcategories ? 'Subcategorii' : 'Categorie'}
           </h3>
           <ul className="space-y-1">
-            {!currentCategoryChildren && (
+            {!hasSubcategories && (
               <li>
                 <button
                   type="button"
                   onClick={() => setFilter('categoryId', '')}
                   className={cn(
                     'block w-full rounded px-2 py-1.5 text-left text-sm',
-                    !defaultCategoryId
+                    !selectedCategoryIdFromQuery
                       ? 'font-medium text-primary-600 dark:text-primary-400'
                       : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
                   )}
@@ -82,7 +83,7 @@ export function ProductListFilters({
             )}
             {displayCategories.map((cat) => (
               <li key={cat.id}>
-                {currentCategoryChildren ? (
+                {hasSubcategories ? (
                   <Link
                     href={`/categorii/${cat.slug}`}
                     className={cn(
@@ -93,18 +94,17 @@ export function ProductListFilters({
                     {cat.name}
                   </Link>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setFilter('categoryId', cat.id)}
+                  <Link
+                    href={`/categorii/${cat.slug}`}
                     className={cn(
                       'block w-full rounded px-2 py-1.5 text-left text-sm',
-                      defaultCategoryId === cat.id
+                      currentCategorySlug === cat.slug
                         ? 'font-medium text-primary-600 dark:text-primary-400'
                         : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
                     )}
                   >
                     {cat.name}
-                  </button>
+                  </Link>
                 )}
               </li>
             ))}

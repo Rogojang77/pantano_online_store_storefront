@@ -15,6 +15,13 @@ const STATUS_LABELS: Record<string, string> = {
   CANCELLED: 'Anulată',
 };
 
+const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Plată în așteptare',
+  PAID: 'Plată confirmată',
+  FAILED: 'Plată eșuată',
+  REFUNDED: 'Plată rambursată',
+};
+
 export default function OrderHistoryPage() {
   const [data, setData] = useState<{ data: Order[]; meta: { total: number; page: number; totalPages: number } } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,19 +70,24 @@ export default function OrderHistoryPage() {
           <ul className="space-y-3">
             {data.data.map((order) => (
               <li key={order.id}>
-                <Link
-                  href={`/cont/comenzi/${order.id}`}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
-                >
-                  <span className="font-medium">{order.orderNumber}</span>
-                  <span className="text-sm text-neutral-500">
-                    {STATUS_LABELS[order.status] ?? order.status}
-                  </span>
-                  <span className="text-sm font-medium">{Number(order.total).toFixed(2)} RON</span>
-                  <span className="text-sm text-neutral-500">
-                    {new Date(order.createdAt).toLocaleDateString('ro-RO')}
-                  </span>
-                </Link>
+                <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+                  <Link
+                    href={`/cont/comenzi/${order.id}`}
+                    className="flex flex-wrap items-center justify-between gap-2 transition-colors hover:text-primary-600 dark:hover:text-primary-400"
+                  >
+                    <span className="font-medium">{order.orderNumber}</span>
+                    <span className="text-sm text-neutral-500">
+                      {STATUS_LABELS[order.status] ?? order.status}
+                    </span>
+                    <span className="text-xs text-neutral-500">
+                      {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}
+                    </span>
+                    <span className="text-sm font-medium">{Number(order.total).toFixed(2)} RON</span>
+                    <span className="text-sm text-neutral-500">
+                      {new Date(order.createdAt).toLocaleDateString('ro-RO')}
+                    </span>
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>

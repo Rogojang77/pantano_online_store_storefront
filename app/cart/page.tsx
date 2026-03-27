@@ -2,18 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useCartStore } from '@/store';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore, useCartStore } from '@/store';
 import { Button, Input } from '@/components/ui';
 import { CartLineItem } from '@/components/cart/cart-line-item';
 import { siteConfig } from '@/config/site';
 import { promotionsApi, cartApi } from '@/lib/api/products';
-import { getAuthToken } from '@/lib/api-client';
 import { api } from '@/lib/api-client';
 
 const VAT_RATE = 0.19;
 
 export default function CartPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { items, updateQuantity, removeItem, itemCount } = useCartStore();
+  const isAuthenticated = Boolean(useAuthStore((s) => s.user));
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -23,6 +26,7 @@ export default function CartPage() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [deliveryEstimate, setDeliveryEstimate] = useState<number | null>(null);
+  const [showCheckoutRedirectNotice, setShowCheckoutRedirectNotice] = useState(searchParams.get('from') === 'checkout-empty');
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.quantity * parseFloat(item.price ?? '0'),
@@ -39,6 +43,20 @@ export default function CartPage() {
       .then((res) => setDeliveryEstimate(parseFloat(res.deliveryFee)))
       .catch(() => setDeliveryEstimate(null));
   }, [subtotal]);
+
+  useEffect(() => {
+    if (searchParams.get('from') === 'checkout-empty') {
+      setShowCheckoutRedirectNotice(true);
+    }
+  }, [searchParams]);
+
+  const dismissCheckoutRedirectNotice = () => {
+    setShowCheckoutRedirectNotice(false);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete('from');
+    const nextQuery = next.toString();
+    router.replace(nextQuery ? `/cart?${nextQuery}` : '/cart');
+  };
 
   const handleApplyCoupon = async () => {
     const code = couponCode.trim();
@@ -57,8 +75,7 @@ export default function CartPage() {
         discount: result.discount ?? 0,
         promotion: result.promotion!,
       });
-      const token = getAuthToken();
-      if (token) {
+      if (isAuthenticated) {
         await cartApi.applyCoupon(code);
       }
     } catch {
@@ -72,8 +89,7 @@ export default function CartPage() {
     setCouponError(null);
     setAppliedCoupon(null);
     setCouponCode('');
-    const token = getAuthToken();
-    if (token) {
+    if (isAuthenticated) {
       try {
         await cartApi.removeCoupon();
       } catch {
@@ -85,6 +101,21 @@ export default function CartPage() {
   if (itemCount() === 0) {
     return (
       <div className="container-wide py-16 text-center">
+        {showCheckoutRedirectNotice && (
+          <div className="mx-auto mb-6 max-w-2xl rounded-xl border border-neutral-300 bg-neutral-100 p-4 text-left dark:border-neutral-700 dark:bg-neutral-800">
+            <p className="text-sm text-neutral-700 dark:text-neutral-200">
+              Coșul este gol, iar checkout-ul s-a oprit. Adaugă produse pentru a continua comanda.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button asChild size="sm" variant="outline" className="rounded-lg">
+                <Link href="/produse">Vezi produse</Link>
+              </Button>
+              <Button type="button" size="sm" variant="ghost" className="rounded-lg" onClick={dismissCheckoutRedirectNotice}>
+                Închide
+              </Button>
+            </div>
+          </div>
+        )}
         <h1 className="heading-page mb-4">Coșul tău</h1>
         <p className="mb-8 text-neutral-600 dark:text-neutral-400">
           Coșul este gol. Adaugă produse pentru a continua.
@@ -98,6 +129,21 @@ export default function CartPage() {
 
   return (
     <div className="container-wide py-8">
+      {showCheckoutRedirectNotice && (
+        <div className="mb-6 rounded-xl border border-neutral-300 bg-neutral-100 p-4 dark:border-neutral-700 dark:bg-neutral-800">
+          <p className="text-sm text-neutral-700 dark:text-neutral-200">
+            Coșul este gol, iar checkout-ul s-a oprit. Verifică produsele înainte să continui.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline" className="rounded-lg">
+              <Link href="/produse">Continuă cumpărăturile</Link>
+            </Button>
+            <Button type="button" size="sm" variant="ghost" className="rounded-lg" onClick={dismissCheckoutRedirectNotice}>
+              Închide
+            </Button>
+          </div>
+        </div>
+      )}
       <h1 className="heading-page mb-8">Coș ({itemCount()} produse)</h1>
       <div className="grid gap-8 lg:grid-cols-3">
         <ul className="space-y-4 lg:col-span-2">
@@ -157,6 +203,11 @@ export default function CartPage() {
                   </div>
                   {couponError && (
                     <p className="text-sm text-red-600 dark:text-red-400">{couponError}</p>
+                  )}
+                  {!isAuthenticated && (
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Codul este verificat acum, iar la finalizarea comenzii ca oaspete va fi reconfirmat.
+                    </p>
                   )}
                 </div>
               )}

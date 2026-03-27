@@ -22,8 +22,6 @@ export const siteConfig = {
   cartStorageKey: 'pantano_cart',
   /** Wishlist localStorage key */
   wishlistStorageKey: 'pantano_wishlist',
-  /** Auth token key (for API sync) */
-  authTokenKey: 'pantano_token',
 } as const;
 
 export type SiteConfig = typeof siteConfig;

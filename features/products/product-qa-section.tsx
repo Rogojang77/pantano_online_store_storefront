@@ -32,8 +32,8 @@ export function ProductQASection({
   const [questionText, setQuestionText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const token = useAuthStore((s) => s.token);
-  const isLoggedIn = !!token;
+  const user = useAuthStore((s) => s.user);
+  const isLoggedIn = !!user;
 
   const handleSubmitQuestion = async (e: React.FormEvent) => {
     e.preventDefault();

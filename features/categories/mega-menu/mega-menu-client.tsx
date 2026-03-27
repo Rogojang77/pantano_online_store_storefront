@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MegaMenuData, MegaMenuCategory, CategoryLevel2 } from '@/types/category';
+import { usePathname } from 'next/navigation';
 
 const HOVER_DELAY_MS = 300;
 const HOVER_DELAY_L2_MS = 200;
@@ -181,6 +182,33 @@ export function MegaMenuClient({ data, error }: MegaMenuClientProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeLevel2Id, setActiveLevel2Id] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  const currentCategorySlug = (() => {
+    const match = pathname.match(/^\/categorii\/([^/]+)$/);
+    return match?.[1] ?? null;
+  })();
+
+  const activeFromRoute = (() => {
+    if (!currentCategorySlug) return null;
+
+    for (const l1 of data.categories) {
+      for (const l2 of l1.children) {
+        if (l2.slug === currentCategorySlug) {
+          return { level1Id: l1.id, level2Id: l2.id };
+        }
+
+        for (const l3 of l2.children) {
+          if (l3.slug === currentCategorySlug) {
+            return { level1Id: l1.id, level2Id: l2.id };
+          }
+        }
+      }
+    }
+
+    return null;
+  })();
+
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const level2LeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const level2HoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -274,6 +302,13 @@ export function MegaMenuClient({ data, error }: MegaMenuClientProps) {
       if (level1HoverTimeoutRef.current) clearTimeout(level1HoverTimeoutRef.current);
     };
   }, []);
+
+  // When opening the mega-menu while already on a category page, pre-select the route category.
+  useEffect(() => {
+    if (!isOpen || !activeFromRoute) return;
+    if (activeCategory == null) setActiveCategory(activeFromRoute.level1Id);
+    if (activeLevel2Id == null) setActiveLevel2Id(activeFromRoute.level2Id);
+  }, [activeCategory, activeFromRoute, activeLevel2Id, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -370,9 +405,9 @@ export function MegaMenuClient({ data, error }: MegaMenuClientProps) {
             <nav className="w-72 flex-shrink-0 border-r border-neutral-100 dark:border-neutral-800 overflow-y-auto bg-neutral-50/50 dark:bg-neutral-800/30">
               <div className="py-2">
                 {data.categories.map((category, index) => (
-                  <button
+                  <Link
                     key={category.id}
-                    type="button"
+                    href={`/categorii/${category.slug}`}
                     className={cn(
                       'group/nav flex w-full items-center justify-between px-5 py-3.5 text-left text-sm transition-all duration-200',
                       activeCategory === category.id
@@ -381,6 +416,7 @@ export function MegaMenuClient({ data, error }: MegaMenuClientProps) {
                     )}
                     onMouseEnter={() => handleCategoryHover(category.id)}
                     onFocus={() => handleCategoryHover(category.id)}
+                    onClick={handleNavigate}
                     style={{
                       animationDelay: `${index * 30}ms`,
                     }}
@@ -401,7 +437,7 @@ export function MegaMenuClient({ data, error }: MegaMenuClientProps) {
                         )}
                       />
                     )}
-                  </button>
+                  </Link>
                 ))}
               </div>
             </nav>

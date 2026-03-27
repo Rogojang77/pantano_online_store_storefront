@@ -93,10 +93,7 @@ export function ProductDetailClient({
   };
 
   const displaySku = variant?.sku ?? product.sku;
-  const productUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/produs/${product.slug}`
-      : `/produs/${product.slug}`;
+  const productUrl = `${siteConfig.url.replace(/\/$/, '')}/produs/${product.slug}`;
 
   return (
     <>

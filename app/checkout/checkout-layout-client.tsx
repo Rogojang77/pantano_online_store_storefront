@@ -13,11 +13,12 @@ export function CheckoutLayoutClient({ children }: { children: React.ReactNode }
   const router = useRouter();
   const itemCount = useCartStore((s) => s.itemCount());
   const isConfirmation = pathname?.startsWith('/checkout/confirmation');
+  const isCheckoutHub = pathname === '/checkout';
 
   useEffect(() => {
     if (isConfirmation) return;
     if (itemCount === 0) {
-      router.replace('/cart');
+      router.replace('/cart?from=checkout-empty');
     }
   }, [pathname, isConfirmation, itemCount, router]);
 
@@ -25,14 +26,15 @@ export function CheckoutLayoutClient({ children }: { children: React.ReactNode }
     ? STEP_IDS[STEP_PATHS.indexOf(pathname!)]
     : 'login';
   const currentIndex = STEP_PATHS.indexOf(pathname ?? '');
-  const completedSteps = STEP_IDS.filter((_, i) => i < currentIndex);
+  const effectiveIndex = currentIndex >= 0 ? currentIndex : 0;
+  const completedSteps = STEP_IDS.filter((_, i) => i < effectiveIndex);
 
-  const showStepIndicator = pathname && STEP_PATHS.includes(pathname);
+  const showStepIndicator = Boolean(pathname && (STEP_PATHS.includes(pathname) || isCheckoutHub));
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
       {showStepIndicator && (
-        <CheckoutStepIndicator currentStep={currentStepId} completedSteps={completedSteps} />
+        <CheckoutStepIndicator currentStep={currentStepId} completedSteps={completedSteps} isPreparing={isCheckoutHub} />
       )}
       <main className="container-wide py-8">{children}</main>
     </div>

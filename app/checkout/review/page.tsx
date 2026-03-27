@@ -4,9 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useCartStore, useCheckoutStore } from '@/store';
+import { useAuthStore, useCartStore, useCheckoutStore } from '@/store';
 import { ordersApi } from '@/lib/api';
-import { getAuthToken } from '@/lib/api-client';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
 
@@ -24,9 +23,13 @@ const DELIVERY_LABELS: Record<string, string> = {
 export default function CheckoutReviewPage() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
-  const clearCart = useCartStore((s) => s.clearCart);
   const shippingAddress = useCheckoutStore((s) => s.shippingAddress);
+  const accountType = useCheckoutStore((s) => s.accountType);
+  const companyName = useCheckoutStore((s) => s.companyName);
+  const companyVatId = useCheckoutStore((s) => s.companyVatId);
+  const companyTradeRegister = useCheckoutStore((s) => s.companyTradeRegister);
   const billingSameAsShipping = useCheckoutStore((s) => s.billingSameAsShipping);
+  const billingAddress = useCheckoutStore((s) => s.billingAddress);
   const deliveryMethod = useCheckoutStore((s) => s.deliveryMethod);
   const deliveryFee = useCheckoutStore((s) => s.deliveryFee);
   const paymentMethod = useCheckoutStore((s) => s.paymentMethod);
@@ -36,9 +39,8 @@ export default function CheckoutReviewPage() {
   const setAcceptedTerms = useCheckoutStore((s) => s.setAcceptedTerms);
   const setAcceptedPrivacy = useCheckoutStore((s) => s.setAcceptedPrivacy);
   const setNewsletterSubscribe = useCheckoutStore((s) => s.setNewsletterSubscribe);
-  const resetCheckout = useCheckoutStore((s) => s.reset);
-  const token = getAuthToken();
-  const isGuest = !token;
+  const user = useAuthStore((s) => s.user);
+  const isGuest = !user;
 
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +77,28 @@ export default function CheckoutReviewPage() {
         county: shippingAddress.county,
         postalCode: shippingAddress.postalCode,
         country: shippingAddress.country,
+        accountType,
+        companyName: accountType === 'COMPANY' ? companyName || undefined : undefined,
+        companyVatId: accountType === 'COMPANY' ? companyVatId || undefined : undefined,
+        companyTradeRegister: accountType === 'COMPANY' ? companyTradeRegister || undefined : undefined,
+        billingSameAsShipping,
+        ...(billingSameAsShipping
+          ? {
+              billingAddressLine1: shippingAddress.addressLine1,
+              billingAddressLine2: shippingAddress.addressLine2,
+              billingCity: shippingAddress.city,
+              billingCounty: shippingAddress.county,
+              billingPostalCode: shippingAddress.postalCode,
+              billingCountry: shippingAddress.country,
+            }
+          : {
+              billingAddressLine1: billingAddress?.addressLine1,
+              billingAddressLine2: billingAddress?.addressLine2,
+              billingCity: billingAddress?.city,
+              billingCounty: billingAddress?.county,
+              billingPostalCode: billingAddress?.postalCode,
+              billingCountry: billingAddress?.country ?? 'RO',
+            }),
         deliveryMethod,
         deliveryFee,
         paymentMethod,
@@ -89,8 +113,6 @@ export default function CheckoutReviewPage() {
           : {}),
       };
       const order = await ordersApi.create(payload);
-      clearCart();
-      resetCheckout();
       router.push(`/checkout/confirmation/${order.id}?email=${encodeURIComponent(shippingAddress.email)}`);
     } catch (err: unknown) {
       const message =

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui';
 import { Label } from '@/components/ui';
 
 export default function NotificationsPage() {
-  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
   const [prefs, setPrefs] = useState({
     newsletterConsent: false,
     notifyOrderStatus: true,
@@ -18,7 +18,7 @@ export default function NotificationsPage() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (!token) return;
+    if (!user) return;
     authApi.profile()
       .then((profile) => {
         setPrefs({
@@ -29,7 +29,7 @@ export default function NotificationsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

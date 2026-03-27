@@ -65,14 +65,16 @@ export default function InvoicesPage() {
                   <span className="text-sm text-neutral-500">
                     {new Date(inv.issuedAt).toLocaleDateString('ro-RO')}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(inv.id, inv.invoiceNumber)}
-                    disabled={downloading === inv.id}
-                  >
-                    {downloading === inv.id ? 'Se descarcă...' : 'Descarcă PDF'}
-                  </Button>
+                  {inv.odooInvoiceId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(inv.id, inv.invoiceNumber)}
+                      disabled={downloading === inv.id}
+                    >
+                      {downloading === inv.id ? 'Se descarcă...' : 'Descarcă PDF'}
+                    </Button>
+                  )}
                 </div>
               </li>
             ))}

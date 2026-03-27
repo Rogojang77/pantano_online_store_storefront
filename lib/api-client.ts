@@ -1,6 +1,6 @@
 /**
  * Central API client for the Pantano backend.
- * Uses fetch with NEXT_PUBLIC_API_URL; supports optional JWT for cart/orders.
+ * Uses fetch with NEXT_PUBLIC_API_URL and cookie-based auth.
  */
 
 import { siteConfig } from '@/config/site';
@@ -22,7 +22,7 @@ async function request<T>(
   if (token) {
     (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(url, { ...init, headers });
+  const res = await fetch(url, { ...init, headers, credentials: 'include' });
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
     throw new ApiError(res.status, res.statusText, errBody);
@@ -61,8 +61,3 @@ export const api = {
     request<T>(path, { method: 'DELETE', token }),
 };
 
-/** Get auth token from storage (e.g. localStorage in client). Used by API hooks. */
-export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(siteConfig.authTokenKey);
-}

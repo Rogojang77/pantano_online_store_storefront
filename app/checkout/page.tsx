@@ -6,19 +6,22 @@ import { useAuthStore } from '@/store';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
+  const isAuthenticated = Boolean(useAuthStore((s) => s.user));
 
   useEffect(() => {
-    if (token) {
+    if (isAuthenticated) {
       router.replace('/checkout/address');
     } else {
       router.replace('/checkout/login');
     }
-  }, [token, router]);
+  }, [isAuthenticated, router]);
 
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <p className="text-neutral-600 dark:text-neutral-400">Se încarcă...</p>
+      <div className="text-center">
+        <p className="text-neutral-700 dark:text-neutral-300">Se pregătește checkout-ul...</p>
+        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">Te redirecționăm la pasul potrivit.</p>
+      </div>
     </div>
   );
 }

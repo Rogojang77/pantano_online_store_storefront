@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 
 export type GuestChoice = 'login' | 'register' | 'guest';
+export type CheckoutAccountType = 'INDIVIDUAL' | 'COMPANY';
 
 export interface CheckoutAddress {
   firstName: string;
@@ -22,6 +23,10 @@ export type PaymentMethodId = 'CARD' | 'CASH_ON_DELIVERY' | 'BANK_TRANSFER';
 
 interface CheckoutState {
   guestChoice: GuestChoice | null;
+  accountType: CheckoutAccountType;
+  companyName: string;
+  companyVatId: string;
+  companyTradeRegister: string;
   shippingAddress: CheckoutAddress | null;
   billingSameAsShipping: boolean;
   billingAddress: CheckoutAddress | null;
@@ -33,6 +38,8 @@ interface CheckoutState {
   newsletterSubscribe: boolean;
 
   setGuestChoice: (choice: GuestChoice) => void;
+  setAccountType: (type: CheckoutAccountType) => void;
+  setCompanyData: (data: Partial<Pick<CheckoutState, 'companyName' | 'companyVatId' | 'companyTradeRegister'>>) => void;
   setShippingAddress: (address: CheckoutAddress | null) => void;
   setBillingSameAsShipping: (same: boolean) => void;
   setBillingAddress: (address: CheckoutAddress | null) => void;
@@ -46,6 +53,10 @@ interface CheckoutState {
 
 const initialState = {
   guestChoice: null,
+  accountType: 'INDIVIDUAL' as CheckoutAccountType,
+  companyName: '',
+  companyVatId: '',
+  companyTradeRegister: '',
   shippingAddress: null,
   billingSameAsShipping: true,
   billingAddress: null,
@@ -60,6 +71,8 @@ const initialState = {
 export const useCheckoutStore = create<CheckoutState>((set) => ({
   ...initialState,
   setGuestChoice: (guestChoice) => set({ guestChoice }),
+  setAccountType: (accountType) => set({ accountType }),
+  setCompanyData: (data) => set((state) => ({ ...state, ...data })),
   setShippingAddress: (shippingAddress) => set({ shippingAddress }),
   setBillingSameAsShipping: (billingSameAsShipping) => set({ billingSameAsShipping }),
   setBillingAddress: (billingAddress) => set({ billingAddress }),

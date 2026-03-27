@@ -1,11 +1,86 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Box } from 'lucide-react';
+import {
+  Box,
+  type LucideIcon,
+  Hammer,
+  Wrench,
+  Drill,
+  PaintBucket,
+  Package,
+  Lightbulb,
+  Leaf,
+  Droplets,
+  Snowflake,
+  Grid3X3,
+  ShowerHead,
+  BrickWall,
+  DoorOpen,
+  Palette,
+  CookingPot,
+  PawPrint,
+  SunMedium,
+  TreePine,
+  Sparkles,
+  ChefHat,
+} from 'lucide-react';
 import { getMegaMenuData } from '@/lib/api/categories';
 import type { MegaMenuCategory } from '@/types/category';
 
+const HOMEPAGE_CATEGORY_ICON_BY_SLUG: Record<string, LucideIcon> = {
+  'baie-sanitare': ShowerHead,
+  'materiale-de-constructii': BrickWall,
+  'lemn-ferestre-usi': DoorOpen,
+  parchet: Grid3X3,
+  'gresie-faianta-pardoseli': Grid3X3,
+  feronerie: Wrench,
+  'vopsea-tapet': PaintBucket,
+  gradina: Leaf,
+  'incalzire-climatizare-ventilatie': Snowflake,
+  'decoratiuni-interioare-tablouri': Palette,
+  bucatarie: CookingPot,
+  'electrice-corpuri-de-iluminat': Lightbulb,
+  'scule-masini-unelte-rafturi': Hammer,
+  'petshop-online': PawPrint,
+  'sisteme-fotovoltaice-solare': SunMedium,
+  'brazi-si-decoratiuni-de-craciun': TreePine,
+  'curatenie-menaj': Sparkles,
+  'echipamente-horeca': ChefHat,
+  'stiluri-de-amenajari-interioare-hornbach': Palette,
+};
+
+const HOMEPAGE_CATEGORY_ICON_BY_NAME: Record<string, LucideIcon> = {
+  'scule si unelte': Hammer,
+  'materiale de constructii': Package,
+  instalatii: Droplets,
+  finisaje: PaintBucket,
+  'climatizare si ventilatie': Snowflake,
+  'electrice si iluminat': Lightbulb,
+  gradina: Leaf,
+};
+
+function normalizeCategoryKey(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function resolveHomepageCategoryIcon(category: MegaMenuCategory): LucideIcon | null {
+  const slugIcon = HOMEPAGE_CATEGORY_ICON_BY_SLUG[category.slug];
+  if (slugIcon) return slugIcon;
+
+  const normalizedName = normalizeCategoryKey(category.name);
+  return HOMEPAGE_CATEGORY_ICON_BY_NAME[normalizedName] ?? null;
+}
+
+
 function CategoryCard({ category }: { category: MegaMenuCategory }) {
   const href = `/categorii/${category.slug}`;
+  const CategoryIcon = resolveHomepageCategoryIcon(category);
   return (
     <Link
       href={href}
@@ -20,6 +95,8 @@ function CategoryCard({ category }: { category: MegaMenuCategory }) {
             className="object-cover transition group-hover:scale-105"
             sizes="64px"
           />
+        ) : CategoryIcon ? (
+          <CategoryIcon className="h-8 w-8 text-neutral-500 dark:text-neutral-400" aria-hidden />
         ) : (
           <Box className="h-8 w-8 text-neutral-500 dark:text-neutral-400" aria-hidden />
         )}

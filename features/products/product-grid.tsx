@@ -29,7 +29,16 @@ interface ProductGridProps {
   limit: number;
   categoryId?: string;
   brandId?: string;
+  attributeValueIds?: string[];
   sort?: ProductSortKey;
+  /**
+   * When true, include products from all descendant categories (subtree),
+   * and (optionally) render grouped sections by `product.categoryId`.
+   */
+  includeDescendants?: boolean;
+  groupedByCategory?: boolean;
+  /** If provided, hide the heading for this category group (page already has an H1). */
+  currentCategoryId?: string;
 }
 
 export function ProductGrid({
@@ -37,21 +46,58 @@ export function ProductGrid({
   limit,
   categoryId,
   brandId,
+  attributeValueIds,
   sort = 'relevance',
+  includeDescendants,
+  groupedByCategory,
+  currentCategoryId,
 }: ProductGridProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const mapSort = (s: ProductSortKey) => {
+    switch (s) {
+      case 'newest':
+        return { sortBy: 'createdAt' as const, sortDir: 'desc' as const };
+      case 'name_asc':
+        return { sortBy: 'name' as const, sortDir: 'asc' as const };
+      case 'name_desc':
+        return { sortBy: 'name' as const, sortDir: 'desc' as const };
+      // Backend doesn't support price-based ordering yet. Keep backend default.
+      case 'price_asc':
+      case 'price_desc':
+      case 'relevance':
+      default:
+        return {};
+    }
+  };
+
+  const sortParams = mapSort(sort);
+
   const { data, isPending } = useQuery({
-    queryKey: ['products', 'list', page, limit, categoryId, brandId, sort],
+    queryKey: [
+      'products',
+      'list',
+      page,
+      limit,
+      categoryId,
+      brandId,
+      sort,
+      includeDescendants,
+      (attributeValueIds ?? []).join(','),
+    ],
     queryFn: () =>
       productsApi.list({
         page,
         limit,
         categoryId,
         brandId,
+        attributeValueIds,
         status: 'ACTIVE',
+        ...(includeDescendants === true ? { includeDescendants: true } : {}),
+        ...(sortParams.sortBy ? { sortBy: sortParams.sortBy } : {}),
+        ...(sortParams.sortDir ? { sortDir: sortParams.sortDir } : {}),
       }),
   });
 
@@ -64,6 +110,30 @@ export function ProductGrid({
 
   const meta = data?.meta;
   const products = data?.data ?? [];
+
+  const groups = (() => {
+    if (!groupedByCategory) return null;
+    const orderedKeys: string[] = [];
+    const map = new Map<string, typeof products>();
+
+    for (const p of products) {
+      const key = p.categoryId;
+      if (!map.has(key)) {
+        map.set(key, []);
+        orderedKeys.push(key);
+      }
+      map.get(key)!.push(p);
+    }
+
+    return orderedKeys.map((categoryId) => {
+      const list = map.get(categoryId) ?? [];
+      return {
+        categoryId,
+        title: list[0]?.category?.name ?? categoryId,
+        products: list,
+      };
+    });
+  })();
 
   return (
     <div className="space-y-6">
@@ -93,13 +163,33 @@ export function ProductGrid({
         <p className="py-12 text-center text-neutral-500">Niciun produs găsit.</p>
       ) : (
         <>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="list">
-            {products.map((product) => (
-              <li key={product.id}>
-                <ProductCard product={product} />
-              </li>
-            ))}
-          </ul>
+          {groups ? (
+            <div className="space-y-10">
+              {groups.map((g) => (
+                <section key={g.categoryId} aria-label={`Produse din ${g.title}`}>
+                  {currentCategoryId == null || g.categoryId !== currentCategoryId ? (
+                    <h2 className="mb-4 text-base font-semibold text-neutral-900 dark:text-white">{g.title}</h2>
+                  ) : null}
+                  <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="list">
+                    {g.products.map((product) => (
+                      <li key={product.id}>
+                        <ProductCard product={product} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" role="list">
+              {products.map((product) => (
+                <li key={product.id}>
+                  <ProductCard product={product} />
+                </li>
+              ))}
+            </ul>
+          )}
+
           {meta && meta.totalPages > 1 && (
             <Pagination
               page={meta.page}

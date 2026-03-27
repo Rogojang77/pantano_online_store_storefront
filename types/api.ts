@@ -35,6 +35,33 @@ export interface Category {
   ancestors?: { id: string; name: string; slug: string }[];
 }
 
+export interface CategoryAttributeValue {
+  id: string;
+  value: string;
+  sortOrder: number;
+}
+
+export interface CategoryAttributeDefinition {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  unit: string | null;
+  isFilterable: boolean;
+  sortOrder: number;
+  values: CategoryAttributeValue[];
+}
+
+export interface CategoryEffectiveAttribute {
+  id: string;
+  categoryId: string;
+  definitionId: string;
+  isRequired: boolean;
+  sortOrder: number;
+  sourceCategoryName?: string | null;
+  definition: CategoryAttributeDefinition;
+}
+
 // --- Brand ---
 export interface Brand {
   id: string;
@@ -131,12 +158,18 @@ export interface Cart {
 }
 
 // --- Auth (mocked / JWT) ---
+export type AccountType = 'INDIVIDUAL' | 'COMPANY';
+
 export interface User {
   id: string;
   email: string;
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
+  accountType?: AccountType;
+  companyName?: string | null;
+  companyVatId?: string | null;
+  companyTradeRegister?: string | null;
   newsletterConsent?: boolean;
   notifyOrderStatus?: boolean;
   language?: string;
@@ -261,6 +294,11 @@ export interface Order {
   status: OrderStatus;
   paymentStatus: string;
   guestEmail?: string | null;
+  accountType?: AccountType;
+  companyName?: string | null;
+  companyVatId?: string | null;
+  companyTradeRegister?: string | null;
+  billingSameAsShipping?: boolean;
   deliveryMethod?: string | null;
   paymentMethod?: string | null;
   addressLine1?: string | null;
@@ -269,6 +307,12 @@ export interface Order {
   county?: string | null;
   postalCode?: string | null;
   country?: string | null;
+  billingAddressLine1?: string | null;
+  billingAddressLine2?: string | null;
+  billingCity?: string | null;
+  billingCounty?: string | null;
+  billingPostalCode?: string | null;
+  billingCountry?: string | null;
   deliveryFee?: string | null;
   subtotal: string;
   discountAmount?: string | null;
@@ -276,6 +320,11 @@ export interface Order {
   createdAt: string;
   items: OrderItem[];
   user?: User | null;
+  invoice?: {
+    id: string;
+    invoiceNumber: string;
+    odooInvoiceId: string | null;
+  } | null;
 }
 
 // --- Addresses ---
@@ -308,6 +357,7 @@ export interface Invoice {
   amount: string;
   status: string;
   issuedAt: string;
+  odooInvoiceId?: string | null;
   order?: { orderNumber: string; createdAt: string };
 }
 

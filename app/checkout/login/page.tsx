@@ -6,10 +6,9 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { useAuthStore, useCheckoutStore } from '@/store';
-import { getAuthToken } from '@/lib/api-client';
-import { siteConfig } from '@/config/site';
 import { Button, Input, Label } from '@/components/ui';
 
 const loginSchema = z.object({
@@ -21,10 +20,11 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function CheckoutLoginPage() {
   const router = useRouter();
-  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
   const setAuth = useAuthStore((s) => s.setAuth);
   const setGuestChoice = useCheckoutStore((s) => s.setGuestChoice);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -39,11 +39,17 @@ export default function CheckoutLoginPage() {
     setError(null);
     try {
       const res = await authApi.login(data.email, data.password);
-      const accessToken = res.accessToken ?? res.access_token ?? '';
-      setAuth(accessToken, res.user ?? { id: '', email: data.email, firstName: null, lastName: null });
-      if (typeof window !== 'undefined' && accessToken) {
-        localStorage.setItem(siteConfig.authTokenKey, accessToken);
-      }
+      setAuth({
+        id: res.user?.id ?? '',
+        email: res.user?.email ?? data.email,
+        firstName: res.user?.firstName ?? null,
+        lastName: res.user?.lastName ?? null,
+        phone: res.user?.phone ?? null,
+        accountType: res.user?.accountType,
+        companyName: res.user?.companyName ?? null,
+        companyVatId: res.user?.companyVatId ?? null,
+        companyTradeRegister: res.user?.companyTradeRegister ?? null,
+      });
       router.push('/checkout/address');
       router.refresh();
     } catch {
@@ -56,7 +62,7 @@ export default function CheckoutLoginPage() {
     router.push('/checkout/address');
   };
 
-  if (token && typeof getAuthToken() === 'string') {
+  if (user) {
     router.replace('/checkout/address');
     return null;
   }
@@ -82,13 +88,23 @@ export default function CheckoutLoginPage() {
             </div>
             <div>
               <Label htmlFor="password">Parolă</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                className="mt-1"
-                {...register('password')}
-              />
+              <div className="relative mt-1">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  className="pr-10"
+                  {...register('password')}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                  aria-label={showPassword ? 'Ascunde parola' : 'Arată parola'}
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
               )}

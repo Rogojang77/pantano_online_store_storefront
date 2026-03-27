@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -14,6 +14,7 @@ import {
   RotateCcw,
   Bell,
 } from 'lucide-react';
+import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/store';
 
 const navItems = [
@@ -35,17 +36,53 @@ export default function AccountDashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!token) {
-      const redirect = encodeURIComponent(pathname || '/cont/dashboard');
-      router.replace(`/cont?redirect=${redirect}`);
-    }
-  }, [token, router, pathname]);
 
-  if (typeof window !== 'undefined' && !token) {
+    let cancelled = false;
+
+    if (user) {
+      setIsCheckingAuth(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    authApi
+      .profile()
+      .then((profile) => {
+        if (cancelled) return;
+        setAuth({
+          id: profile.id,
+          email: profile.email,
+          firstName: profile.firstName ?? null,
+          lastName: profile.lastName ?? null,
+          phone: profile.phone ?? null,
+          accountType: profile.accountType,
+          companyName: profile.companyName ?? null,
+          companyVatId: profile.companyVatId ?? null,
+          companyTradeRegister: profile.companyTradeRegister ?? null,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        const redirect = encodeURIComponent(pathname || '/cont/dashboard');
+        router.replace(`/cont?redirect=${redirect}`);
+      })
+      .finally(() => {
+        if (!cancelled) setIsCheckingAuth(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, router, pathname, setAuth]);
+
+  if (isCheckingAuth || (typeof window !== 'undefined' && !user)) {
     return <div className="container-wide mx-auto py-16 text-center text-neutral-500">Se încarcă...</div>;
   }
 

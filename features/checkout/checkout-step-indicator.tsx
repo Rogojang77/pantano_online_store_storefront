@@ -16,14 +16,44 @@ interface CheckoutStepIndicatorProps {
   currentStep: StepId;
   /** Steps that are completed (user can navigate back to them) */
   completedSteps?: StepId[];
+  /** Indicates redirecting from /checkout to a concrete step */
+  isPreparing?: boolean;
 }
 
-export function CheckoutStepIndicator({ currentStep, completedSteps = [] }: CheckoutStepIndicatorProps) {
+export function CheckoutStepIndicator({
+  currentStep,
+  completedSteps = [],
+  isPreparing = false,
+}: CheckoutStepIndicatorProps) {
   const currentIndex = STEPS.findIndex((s) => s.id === currentStep);
+  const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+  const currentLabel = STEPS[safeIndex]?.label ?? STEPS[0].label;
+  const progressPercent = ((safeIndex + 1) / STEPS.length) * 100;
 
   return (
     <nav aria-label="Progres checkout" className="border-b border-neutral-200 bg-white py-4 dark:border-neutral-700 dark:bg-neutral-900">
-      <div className="container-wide flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+      <div className="container-wide space-y-3 md:hidden">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/cart"
+            className="text-sm font-medium text-neutral-600 hover:text-primary-600 dark:text-neutral-400 dark:hover:text-primary-400"
+          >
+            Coș
+          </Link>
+          <p className="text-sm font-medium text-neutral-900 dark:text-white">
+            {isPreparing ? "Te redirecționăm la pasul potrivit..." : `Pas ${safeIndex + 1} din ${STEPS.length}: ${currentLabel}`}
+          </p>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+          {isPreparing ? (
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-primary-500" />
+          ) : (
+            <div className="h-full rounded-full bg-primary-500 transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
+          )}
+        </div>
+      </div>
+
+      <div className="container-wide hidden flex-wrap items-center justify-center gap-2 sm:gap-4 md:flex">
         <Link
           href="/cart"
           className="text-sm font-medium text-neutral-600 hover:text-primary-600 dark:text-neutral-400 dark:hover:text-primary-400"
@@ -49,9 +79,10 @@ export function CheckoutStepIndicator({ currentStep, completedSteps = [] }: Chec
                 </Link>
               ) : (
                 <span
+                  aria-current={isCurrent ? "step" : undefined}
                   className={`text-sm font-medium ${
                     isCurrent
-                      ? 'text-neutral-900 dark:text-white'
+                      ? 'text-primary-700 dark:text-primary-300'
                       : isCompleted
                         ? 'text-neutral-500 dark:text-neutral-400'
                         : 'text-neutral-400 dark:text-neutral-500'

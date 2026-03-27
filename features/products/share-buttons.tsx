@@ -14,7 +14,9 @@ interface ShareButtonsProps {
 export function ShareButtons({ url, title, className }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = url.startsWith('http') ? url : `${typeof window !== 'undefined' ? window.location.origin : ''}${url}`;
+  const shareUrl = url.startsWith('http')
+    ? url
+    : (url.startsWith('/') ? url : `/${url}`);
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const text = encodeURIComponent(`${title} - ${shareUrl}`);
