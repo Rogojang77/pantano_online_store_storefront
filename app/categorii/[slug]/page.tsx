@@ -92,7 +92,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             Subcategorii
           </h2>
           <ul className="flex gap-3 overflow-x-auto pb-2">
-            {category.children.map((child) => (
+            {category.children?.map((child) => (
               <li key={child.id} className="shrink-0">
                 <Link
                   href={`/categorii/${child.slug}`}
