@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,12 +8,7 @@ import { useAuthStore, useCartStore, useCheckoutStore } from '@/store';
 import { ordersApi } from '@/lib/api';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
-
-const PAYMENT_LABELS: Record<string, string> = {
-  CARD: 'Card (debit / credit)',
-  CASH_ON_DELIVERY: 'Plată la livrare (numerar)',
-  BANK_TRANSFER: 'Transfer bancar',
-};
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 const DELIVERY_LABELS: Record<string, string> = {
   STANDARD: 'Livrare standard',
@@ -33,6 +28,7 @@ export default function CheckoutReviewPage() {
   const deliveryMethod = useCheckoutStore((s) => s.deliveryMethod);
   const deliveryFee = useCheckoutStore((s) => s.deliveryFee);
   const paymentMethod = useCheckoutStore((s) => s.paymentMethod);
+  const setPaymentMethod = useCheckoutStore((s) => s.setPaymentMethod);
   const acceptedTerms = useCheckoutStore((s) => s.acceptedTerms);
   const acceptedPrivacy = useCheckoutStore((s) => s.acceptedPrivacy);
   const newsletterSubscribe = useCheckoutStore((s) => s.newsletterSubscribe);
@@ -44,6 +40,10 @@ export default function CheckoutReviewPage() {
 
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!paymentMethod) setPaymentMethod('CARD');
+  }, [paymentMethod, setPaymentMethod]);
 
   const subtotal = items.reduce(
     (sum, i) => sum + i.quantity * parseFloat(i.price ?? '0'),
@@ -58,7 +58,6 @@ export default function CheckoutReviewPage() {
     shippingAddress &&
     deliveryMethod != null &&
     deliveryFee != null &&
-    paymentMethod &&
     acceptedTerms &&
     acceptedPrivacy;
 
@@ -101,7 +100,7 @@ export default function CheckoutReviewPage() {
             }),
         deliveryMethod,
         deliveryFee,
-        paymentMethod,
+        paymentMethod: 'CARD',
         newsletterSubscribe: newsletterSubscribe ?? false,
         ...(isGuest
           ? {
@@ -144,10 +143,10 @@ export default function CheckoutReviewPage() {
                   {item.imageUrl && (
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-700">
                       <Image
-                        src={item.imageUrl}
+                        src={resolveBackendMediaUrl(item.imageUrl)}
                         alt={item.name ?? ''}
                         fill
-                        className="object-cover"
+                        className="object-contain"
                         sizes="64px"
                       />
                     </div>
@@ -194,7 +193,7 @@ export default function CheckoutReviewPage() {
             </p>
             <p className="mt-1 text-sm">
               <span className="font-medium text-neutral-700 dark:text-neutral-300">Plată:</span>{' '}
-              {paymentMethod ? PAYMENT_LABELS[paymentMethod] ?? paymentMethod : '—'}
+              Plată online cu cardul (debit / credit)
             </p>
           </div>
 

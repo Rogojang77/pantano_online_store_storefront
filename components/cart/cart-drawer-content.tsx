@@ -28,7 +28,7 @@ export function CartDrawerContent({ onClose }: CartDrawerContentProps) {
             Coșul este gol. Adaugă produse pentru a continua.
           </p>
           <Button asChild>
-            <Link href="/produse" onClick={onClose}>
+            <Link href="/categorii" onClick={onClose}>
               Continuă cumpărăturile
             </Link>
           </Button>
@@ -69,7 +69,7 @@ export function CartDrawerContent({ onClose }: CartDrawerContentProps) {
             </Link>
           </Button>
           <Button asChild variant="ghost" size="sm" className="w-full">
-            <Link href="/produse" onClick={onClose}>
+            <Link href="/categorii" onClick={onClose}>
               Continuă cumpărăturile
             </Link>
           </Button>

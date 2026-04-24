@@ -16,7 +16,7 @@ export default function WishlistPage() {
           Nu ai produse în lista de dorințe.
         </p>
         <Button asChild>
-          <Link href="/produse">Explorează produse</Link>
+          <Link href="/categorii">Explorează categorii</Link>
         </Button>
       </div>
     );

@@ -40,6 +40,7 @@ export type ProductSortKey =
 export interface ProductListFilters {
   categoryId?: string;
   brandId?: string;
+  brandIds?: string[];
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;

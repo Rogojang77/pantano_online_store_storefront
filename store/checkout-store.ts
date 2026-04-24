@@ -19,7 +19,7 @@ export interface CheckoutAddress {
 }
 
 export type DeliveryMethodId = 'STANDARD' | 'EXPRESS';
-export type PaymentMethodId = 'CARD' | 'CASH_ON_DELIVERY' | 'BANK_TRANSFER';
+export type PaymentMethodId = 'CARD';
 
 interface CheckoutState {
   guestChoice: GuestChoice | null;

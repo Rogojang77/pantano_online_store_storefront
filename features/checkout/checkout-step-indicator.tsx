@@ -6,7 +6,6 @@ const STEPS = [
   { id: 'login', label: 'Autentificare', path: '/checkout/login' },
   { id: 'address', label: 'Adresă', path: '/checkout/address' },
   { id: 'delivery', label: 'Livrare', path: '/checkout/delivery' },
-  { id: 'payment', label: 'Plată', path: '/checkout/payment' },
   { id: 'review', label: 'Confirmare', path: '/checkout/review' },
 ] as const;
 

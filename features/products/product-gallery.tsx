@@ -6,6 +6,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import type { ProductImage } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 interface ProductGalleryProps {
   images: ProductImage[];
@@ -61,10 +62,10 @@ export function ProductGallery({
           </span>
         </button>
         <Image
-          src={selectedImage.url}
+          src={resolveBackendMediaUrl(selectedImage.url)}
           alt={selectedImage.alt ?? productName}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
         />
@@ -90,10 +91,10 @@ export function ProductGallery({
               )}
             >
               <Image
-                src={img.url}
+                src={resolveBackendMediaUrl(img.url)}
                 alt={img.alt ?? ''}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="80px"
               />
             </button>
@@ -136,7 +137,7 @@ export function ProductGallery({
             )}
             <div className="relative max-h-[90vh] w-full max-w-4xl">
               <Image
-                src={selectedImage.url}
+                src={resolveBackendMediaUrl(selectedImage.url)}
                 alt={selectedImage.alt ?? productName}
                 width={1200}
                 height={1200}

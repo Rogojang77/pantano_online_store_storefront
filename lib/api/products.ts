@@ -12,6 +12,8 @@ import type {
   SearchProductsResult,
   SearchSuggestionsResult,
   Brand,
+  ProductBrandFacet,
+  ProductFilterFacetsResponse,
   Cart,
   CartItem,
   LoginResponse,
@@ -26,9 +28,13 @@ type ProductsQuery = {
   categoryId?: string;
   includeDescendants?: boolean;
   brandId?: string;
+  brandIds?: string[];
   attributeValueIds?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
   status?: string;
-  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'ean' | 'sku';
+  sortBy?: 'relevance' | 'price' | 'name' | 'createdAt' | 'updatedAt' | 'ean' | 'sku';
   sortDir?: 'asc' | 'desc';
 };
 
@@ -42,10 +48,14 @@ export const productsApi = {
     if (params.limit != null) search.set('limit', String(params.limit));
     if (params.categoryId) search.set('categoryId', params.categoryId);
     if (params.includeDescendants != null) search.set('includeDescendants', String(params.includeDescendants));
-    if (params.brandId) search.set('brandId', params.brandId);
+    if (params.brandIds?.length) search.set('brandIds', params.brandIds.join(','));
+    else if (params.brandId) search.set('brandId', params.brandId);
     if (params.attributeValueIds?.length) {
       search.set('attributeValueIds', params.attributeValueIds.join(','));
     }
+    if (params.minPrice != null) search.set('minPrice', String(params.minPrice));
+    if (params.maxPrice != null) search.set('maxPrice', String(params.maxPrice));
+    if (params.inStock != null) search.set('inStock', String(params.inStock));
     if (params.status) search.set('status', params.status);
     if (params.sortBy) search.set('sortBy', params.sortBy);
     if (params.sortDir) search.set('sortDir', params.sortDir);
@@ -113,6 +123,36 @@ export const productsApi = {
       { answer }
     );
   },
+  brandFacets: (params: Omit<ProductsQuery, 'page' | 'limit' | 'sortBy' | 'sortDir'> = {}) => {
+    const search = new URLSearchParams();
+    if (params.categoryId) search.set('categoryId', params.categoryId);
+    if (params.includeDescendants != null) search.set('includeDescendants', String(params.includeDescendants));
+    if (params.attributeValueIds?.length) {
+      search.set('attributeValueIds', params.attributeValueIds.join(','));
+    }
+    if (params.minPrice != null) search.set('minPrice', String(params.minPrice));
+    if (params.maxPrice != null) search.set('maxPrice', String(params.maxPrice));
+    if (params.inStock != null) search.set('inStock', String(params.inStock));
+    if (params.status) search.set('status', params.status);
+    const q = search.toString();
+    return api.get<ProductBrandFacet[]>(q ? `/products/brands/facets?${q}` : '/products/brands/facets');
+  },
+  facets: (params: Omit<ProductsQuery, 'page' | 'limit' | 'sortBy' | 'sortDir'> = {}) => {
+    const search = new URLSearchParams();
+    if (params.categoryId) search.set('categoryId', params.categoryId);
+    if (params.includeDescendants != null) search.set('includeDescendants', String(params.includeDescendants));
+    if (params.brandIds?.length) search.set('brandIds', params.brandIds.join(','));
+    else if (params.brandId) search.set('brandId', params.brandId);
+    if (params.attributeValueIds?.length) {
+      search.set('attributeValueIds', params.attributeValueIds.join(','));
+    }
+    if (params.minPrice != null) search.set('minPrice', String(params.minPrice));
+    if (params.maxPrice != null) search.set('maxPrice', String(params.maxPrice));
+    if (params.inStock != null) search.set('inStock', String(params.inStock));
+    if (params.status) search.set('status', params.status);
+    const q = search.toString();
+    return api.get<ProductFilterFacetsResponse>(q ? `/products/facets?${q}` : '/products/facets');
+  },
 };
 
 export const categoriesApi = {
@@ -141,6 +181,7 @@ type SearchQuery = {
   limit?: number;
   categoryId?: string;
   brandId?: string;
+  brandIds?: string[];
 };
 
 type SearchSuggestionsQuery = {
@@ -156,7 +197,8 @@ export const searchApi = {
     if (params.page != null) search.set('page', String(params.page));
     if (params.limit != null) search.set('limit', String(params.limit));
     if (params.categoryId) search.set('categoryId', params.categoryId);
-    if (params.brandId) search.set('brandId', params.brandId);
+    if (params.brandIds?.length) search.set('brandIds', params.brandIds.join(','));
+    else if (params.brandId) search.set('brandId', params.brandId);
     return api.get<SearchProductsResult>(`/search/products?${search.toString()}`);
   },
   suggestions: (params: SearchSuggestionsQuery) => {

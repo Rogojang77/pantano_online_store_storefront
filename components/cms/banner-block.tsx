@@ -30,7 +30,7 @@ export function BannerBlock({ block }: BannerBlockProps) {
               src={block.backgroundImageUrl!}
               alt={block.backgroundImageAlt ?? ''}
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="100vw"
               priority
             />

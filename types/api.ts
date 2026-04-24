@@ -23,6 +23,7 @@ export interface Category {
   id: string;
   name: string;
   slug: string;
+  imageUrl?: string | null;
   parentId: string | null;
   level: number;
   path: string;
@@ -69,6 +70,42 @@ export interface Brand {
   slug: string;
   logoUrl: string | null;
   isActive: boolean;
+}
+
+export interface ProductBrandFacet {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  productCount: number;
+}
+
+export interface ProductAttributeFacetValue {
+  id: string;
+  value: string;
+  normalizedValue: string;
+  productCount: number;
+  selected: boolean;
+  disabled: boolean;
+}
+
+export interface ProductAttributeFacet {
+  definitionId: string;
+  name: string;
+  code: string;
+  dataType: string;
+  filterType: 'checkbox' | 'dropdown' | 'range';
+  unit: string | null;
+  sortOrder: number;
+  values: ProductAttributeFacetValue[];
+  range?: { min: number; max: number };
+}
+
+export interface ProductFilterFacetsResponse {
+  totalProducts: number;
+  brands: ProductBrandFacet[];
+  price: { min: number | null; max: number | null };
+  attributes: ProductAttributeFacet[];
 }
 
 // --- Product image ---

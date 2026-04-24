@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { LocalCartItem } from '@/types/store';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 interface CartLineItemProps {
   item: LocalCartItem;
@@ -39,10 +40,10 @@ export function CartLineItem({
           }
         >
           <Image
-            src={item.imageUrl}
+            src={resolveBackendMediaUrl(item.imageUrl)}
             alt={item.name ?? ''}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes={compact ? '64px' : '96px'}
           />
         </div>

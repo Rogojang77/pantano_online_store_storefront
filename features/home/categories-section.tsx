@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { getMegaMenuData } from '@/lib/api/categories';
 import type { MegaMenuCategory } from '@/types/category';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 const HOMEPAGE_CATEGORY_ICON_BY_SLUG: Record<string, LucideIcon> = {
   'baie-sanitare': ShowerHead,
@@ -89,10 +90,10 @@ function CategoryCard({ category }: { category: MegaMenuCategory }) {
       <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-700">
         {category.imageUrl ? (
           <Image
-            src={category.imageUrl}
+            src={resolveBackendMediaUrl(category.imageUrl)}
             alt=""
             fill
-            className="object-cover transition group-hover:scale-105"
+            className="object-contain transition group-hover:scale-105"
             sizes="64px"
           />
         ) : CategoryIcon ? (

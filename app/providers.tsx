@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
+import { CookieConsentProvider } from '@/features/cookies/consent-context';
 
 const defaultOptions = {
   defaultOptions: {
@@ -16,5 +17,9 @@ const defaultOptions = {
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient(defaultOptions));
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CookieConsentProvider>{children}</CookieConsentProvider>
+    </QueryClientProvider>
+  );
 }

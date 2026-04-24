@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 const DEBOUNCE_MS = siteConfig.searchDebounceMs;
 
@@ -160,10 +161,10 @@ export function HeaderSearchTrigger({ className }: { className?: string }) {
                               {img && (
                                 <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800">
                                   <Image
-                                    src={img.url}
+                                    src={resolveBackendMediaUrl(img.url)}
                                     alt={img.alt ?? product.name}
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                     sizes="48px"
                                   />
                                 </span>

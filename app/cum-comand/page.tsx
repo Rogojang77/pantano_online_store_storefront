@@ -26,8 +26,8 @@ const steps = [
     text: 'Introdu adresa de livrare și, dacă este cazul, datele de facturare. Poți alege livrare la domiciliu sau ridicare din magazin, dacă este disponibilă.',
   },
   {
-    title: 'Alege metoda de plată',
-    text: 'Selectează plata cu cardul, ramburs, transfer bancar sau în rate (unde este ofertat). Urmează instrucțiunile pentru a finaliza plata.',
+    title: 'Plată online',
+    text: 'Plata se face exclusiv online cu cardul. După confirmarea comenzii vei fi redirecționat către procesatorul de plăți securizat.',
   },
   {
     title: 'Confirmarea comenzii',

@@ -9,6 +9,7 @@ import { siteConfig } from '@/config/site';
 import { Button, Badge, Stars } from '@/components/ui';
 import { useCartStore, useWishlistStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 interface ProductCardProps {
   product: Product;
@@ -112,10 +113,10 @@ export function ProductCard({ product, className }: ProductCardProps) {
       <div className="relative aspect-[4/3] overflow-hidden bg-neutral-100 dark:bg-neutral-700">
         {img ? (
           <Image
-            src={img.url}
+            src={resolveBackendMediaUrl(img.url)}
             alt={img.alt ?? product.name}
             fill
-            className="object-cover transition group-hover:scale-105"
+            className="object-contain transition group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (

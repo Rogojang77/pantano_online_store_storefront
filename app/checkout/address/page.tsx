@@ -208,8 +208,22 @@ export default function CheckoutAddressPage() {
           </label>
         </div>
         {accountType === 'COMPANY' && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+          <div className="flex flex-col gap-4">
+            <div>
+              <Label htmlFor="companyVatId">CUI / CIF *</Label>
+              <Input
+                id="companyVatId"
+                value={companyVatId}
+                onChange={(e) => {
+                  setCompanyVatId(e.target.value);
+                }}
+                className="mt-1"
+              />
+              {companyErrors.companyVatId && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{companyErrors.companyVatId}</p>
+              )}
+            </div>
+            <div>
               <Label htmlFor="companyName">Denumire firmă *</Label>
               <Input
                 id="companyName"
@@ -219,18 +233,6 @@ export default function CheckoutAddressPage() {
               />
               {companyErrors.companyName && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{companyErrors.companyName}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="companyVatId">CUI / CIF *</Label>
-              <Input
-                id="companyVatId"
-                value={companyVatId}
-                onChange={(e) => setCompanyVatId(e.target.value)}
-                className="mt-1"
-              />
-              {companyErrors.companyVatId && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{companyErrors.companyVatId}</p>
               )}
             </div>
             <div>

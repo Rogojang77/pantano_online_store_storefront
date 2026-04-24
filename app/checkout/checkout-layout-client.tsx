@@ -5,8 +5,8 @@ import { useEffect } from 'react';
 import { useCartStore } from '@/store';
 import { CheckoutStepIndicator } from '@/features/checkout/checkout-step-indicator';
 
-const STEP_PATHS = ['/checkout/login', '/checkout/address', '/checkout/delivery', '/checkout/payment', '/checkout/review'];
-const STEP_IDS = ['login', 'address', 'delivery', 'payment', 'review'] as const;
+const STEP_PATHS = ['/checkout/login', '/checkout/address', '/checkout/delivery', '/checkout/review'];
+const STEP_IDS = ['login', 'address', 'delivery', 'review'] as const;
 
 export function CheckoutLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

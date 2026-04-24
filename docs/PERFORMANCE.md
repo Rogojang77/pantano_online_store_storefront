@@ -2,7 +2,7 @@
 
 ## Implemented
 
-- **Route-based code splitting**: Next.js App Router splits by route; dynamic routes (`/produs/[slug]`, `/categorii/[slug]`, `/produse`, `/cautare`) are not bundled into the home page.
+- **Route-based code splitting**: Next.js App Router splits by route; dynamic routes (`/produs/[slug]`, `/categorii/[slug]`, `/cautare`) are not bundled into the home page.
 - **Suspense and skeletons**: Product listing and category pages wrap the product grid in `<Suspense fallback={<ProductGridSkeleton />}>` so the shell renders immediately and the grid shows a skeleton until data is ready.
 - **Image optimization**: Next.js `<Image>` is used for product images, hero, and promo blocks with explicit `sizes` to avoid layout shift and enable responsive srcset.
 - **Debounced search**: Header search uses `useDebouncedValue` (300 ms) so we don’t hit the API on every keystroke.

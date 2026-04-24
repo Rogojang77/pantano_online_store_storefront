@@ -53,9 +53,9 @@ Production-ready, Hornbach-style DIY / construction materials storefront for the
 
 ## Main flows
 
-- **Home**: CMS-style blocks (hero, promo grid, banner); link to categories and products.
+- **Home**: CMS-style blocks (hero, promo grid, banner); link to categories.
 - **Categories**: `/categorii` (roots), `/categorii/[slug]` (products in category with filters).
-- **Products**: `/produse` (listing with filters, sort, pagination), `/produs/[slug]` (detail, add to cart, wishlist).
+- **Products**: `/produs/[slug]` (detail, add to cart, wishlist).
 - **Search**: Header search with debounced suggestions; `/cautare?q=...` for full results.
 - **Cart**: `/cart` – local store; add/update/remove; link to checkout (placeholder).
 - **Wishlist**: `/wishlist` – local store.

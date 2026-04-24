@@ -20,7 +20,7 @@ const faqItems = [
   },
   {
     q: 'Care sunt metodele de plată acceptate?',
-    a: 'Acceptăm plata cu cardul (online sau la livrare), ramburs, transfer bancar și în rate (unde este disponibil). Detalii complete găsești la „Cum plătesc”.',
+    a: 'Acceptăm doar plată online cu cardul (debit/credit). Detalii la „Cum plătesc”.',
   },
   {
     q: 'În cât timp primesc comanda?',

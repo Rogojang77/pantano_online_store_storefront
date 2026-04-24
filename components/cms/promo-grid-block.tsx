@@ -39,7 +39,7 @@ export function PromoGridBlock({ block }: PromoGridBlockProps) {
                   src={item.imageUrl}
                   alt={item.imageAlt ?? item.title}
                   fill
-                  className="object-cover transition group-hover:scale-105"
+                  className="object-contain transition group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
               </div>

@@ -54,6 +54,7 @@ export const footerSections = [
     links: [
       { label: 'Termeni și condiții', href: '/termeni' },
       { label: 'Politica de confidențialitate', href: '/confidentialitate' },
+      { label: 'Politica de retur', href: '/politica-de-retur' },
       { label: 'Cookie-uri', href: '/cookie-uri' },
     ],
   },

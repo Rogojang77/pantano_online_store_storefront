@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { footerSections } from '@/config/navigation';
 import { siteConfig } from '@/config/site';
 import { Logo } from '@/components/ui/logo';
+import { useCookieConsent } from '@/features/cookies/consent-context';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { openPreferences } = useCookieConsent();
 
   return (
     <footer className="border-t border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/50">
@@ -39,6 +41,15 @@ export function Footer() {
           ))}
         </div>
         <div className="mt-12 border-t border-neutral-200 pt-8 dark:border-neutral-800">
+          <div className="mb-4 flex justify-center">
+            <button
+              type="button"
+              onClick={openPreferences}
+              className="text-sm text-neutral-600 underline-offset-4 hover:text-primary-600 hover:underline dark:text-neutral-400 dark:hover:text-primary-400"
+            >
+              Setări cookie-uri
+            </button>
+          </div>
           <p className="text-center text-sm text-neutral-500 dark:text-neutral-400">
             © {currentYear} {siteConfig.name}. Toate drepturile rezervate.
           </p>

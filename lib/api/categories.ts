@@ -17,6 +17,8 @@ interface LegacyCategory {
   level: number;
   isActive: boolean;
   sortOrder: number;
+  imageUrl?: string | null;
+  iconName?: string | null;
 }
 
 function transformLegacyToMegaMenu(categories: LegacyCategory[]): MegaMenuData {
@@ -40,6 +42,7 @@ function transformLegacyToMegaMenu(categories: LegacyCategory[]): MegaMenuData {
               name: l3.name,
               slug: l3.slug,
               level: 3,
+              imageUrl: l3.imageUrl ?? null,
               productCount: 0,
             }));
 
@@ -48,6 +51,7 @@ function transformLegacyToMegaMenu(categories: LegacyCategory[]): MegaMenuData {
             name: l2.name,
             slug: l2.slug,
             level: 2,
+            imageUrl: l2.imageUrl ?? null,
             productCount: 0,
             children: l3Children,
             shortcuts: [],
@@ -59,8 +63,8 @@ function transformLegacyToMegaMenu(categories: LegacyCategory[]): MegaMenuData {
         name: l1.name,
         slug: l1.slug,
         level: 1,
-        iconName: null,
-        imageUrl: null,
+        iconName: l1.iconName ?? null,
+        imageUrl: l1.imageUrl ?? null,
         productCount: 0,
         children: l2Children,
         shortcuts: [],
@@ -101,7 +105,7 @@ export interface CategoryBySlugResponse {
   level: number;
   parentId: string | null;
   parent: { id: string; name: string; slug: string } | null;
-  children: { id: string; name: string; slug: string; productCount: number }[];
+  children: { id: string; name: string; slug: string; imageUrl?: string | null; productCount: number }[];
   ancestors?: { id: string; name: string; slug: string }[];
   redirectTo?: string;
 }

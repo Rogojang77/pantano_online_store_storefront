@@ -123,7 +123,7 @@ export default function CheckoutConfirmationPage() {
       </p>
       <div className="flex flex-wrap justify-center gap-4">
         <Button asChild>
-          <Link href="/produse">Continuă cumpărăturile</Link>
+          <Link href="/categorii">Continuă cumpărăturile</Link>
         </Button>
         {order.userId && (
           <Button variant="outline" asChild>

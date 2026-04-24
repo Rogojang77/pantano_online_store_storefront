@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { brandsApi } from '@/lib/api';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 const BRANDS_LIMIT = 12;
 
@@ -24,12 +25,12 @@ export async function BrandsSection() {
         {brands.map((brand) => (
           <Link
             key={brand.id}
-            href={`/produse?brandId=${brand.id}`}
+            href={`/brand/${brand.slug}`}
             className="flex h-16 w-32 items-center justify-center rounded-lg border border-neutral-200 bg-white p-4 transition hover:border-primary-200 hover:shadow-sm dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-primary-800"
           >
             {brand.logoUrl ? (
               <Image
-                src={brand.logoUrl}
+                src={resolveBackendMediaUrl(brand.logoUrl)}
                 alt={brand.name}
                 width={128}
                 height={64}

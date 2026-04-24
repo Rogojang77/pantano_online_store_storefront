@@ -8,6 +8,7 @@ import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
 import { useCartStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 interface StickyAddToCartBarProps {
   product: Product;
@@ -81,10 +82,10 @@ export function StickyAddToCartBar({
         {primaryImage && (
           <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-800">
             <Image
-              src={primaryImage.url}
+              src={resolveBackendMediaUrl(primaryImage.url)}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="48px"
             />
           </div>

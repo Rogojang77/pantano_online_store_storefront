@@ -108,7 +108,7 @@ export default function CartPage() {
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button asChild size="sm" variant="outline" className="rounded-lg">
-                <Link href="/produse">Vezi produse</Link>
+                <Link href="/categorii">Vezi categorii</Link>
               </Button>
               <Button type="button" size="sm" variant="ghost" className="rounded-lg" onClick={dismissCheckoutRedirectNotice}>
                 Închide
@@ -121,7 +121,7 @@ export default function CartPage() {
           Coșul este gol. Adaugă produse pentru a continua.
         </p>
         <Button asChild>
-          <Link href="/produse">Continuă cumpărăturile</Link>
+          <Link href="/categorii">Continuă cumpărăturile</Link>
         </Button>
       </div>
     );
@@ -136,7 +136,7 @@ export default function CartPage() {
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline" className="rounded-lg">
-              <Link href="/produse">Continuă cumpărăturile</Link>
+              <Link href="/categorii">Continuă cumpărăturile</Link>
             </Button>
             <Button type="button" size="sm" variant="ghost" className="rounded-lg" onClick={dismissCheckoutRedirectNotice}>
               Închide
@@ -246,7 +246,7 @@ export default function CartPage() {
               )}
               <div className="mt-6 flex flex-col gap-2">
                 <Button asChild variant="outline" className="w-full rounded-xl" size="lg">
-                  <Link href="/produse">Continuă cumpărăturile</Link>
+                  <Link href="/categorii">Continuă cumpărăturile</Link>
                 </Button>
                 <Button asChild size="lg" className="w-full rounded-xl">
                   <Link href="/checkout">Finalizează comanda</Link>

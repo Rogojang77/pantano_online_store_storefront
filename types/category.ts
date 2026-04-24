@@ -48,6 +48,7 @@ export interface CategoryTreeNode {
   id: string;
   name: string;
   slug: string;
+  imageUrl?: string | null;
   level: number;
   parentId: string | null;
   sortOrder: number;
@@ -64,6 +65,7 @@ export interface FlatCategory {
   name: string;
   normalizedName: string;
   slug: string;
+  imageUrl?: string | null;
   level: number;
   parentId: string | null;
   parentName?: string;

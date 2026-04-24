@@ -43,7 +43,7 @@ export function FeaturedProductsSection() {
           Produse populare
         </h2>
         <Button asChild size="lg" variant="outline">
-          <Link href="/produse">Vezi toate produsele</Link>
+          <Link href="/categorii">Vezi toate categoriile</Link>
         </Button>
       </div>
       <Suspense fallback={<ProductGridSkeleton count={FEATURED_LIMIT} />}>

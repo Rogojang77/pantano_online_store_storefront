@@ -110,7 +110,7 @@ export function ContactInfo({ config }: ContactInfoProps) {
               src={imageUrl}
               alt=""
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>

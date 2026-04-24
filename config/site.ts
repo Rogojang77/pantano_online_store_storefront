@@ -22,6 +22,8 @@ export const siteConfig = {
   cartStorageKey: 'pantano_cart',
   /** Wishlist localStorage key */
   wishlistStorageKey: 'pantano_wishlist',
+  /** Cookie consent storage key */
+  cookieConsentStorageKey: 'pantano_cookie_consent',
 } as const;
 
 export type SiteConfig = typeof siteConfig;

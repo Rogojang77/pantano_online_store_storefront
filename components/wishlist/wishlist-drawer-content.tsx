@@ -6,6 +6,7 @@ import type { Product } from '@/types/api';
 import type { WishlistItem } from '@/types/store';
 import { useCartStore, useWishlistStore, useUIStore } from '@/store';
 import { Button, SheetHeader, SheetTitle } from '@/components/ui';
+import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
 function getPrimaryImage(product: Product) {
   const images = product.images ?? [];
@@ -60,10 +61,10 @@ function WishlistDrawerRow({ item, onClose }: WishlistDrawerRowProps) {
       {img?.url && (
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-700">
           <Image
-            src={img.url}
+            src={resolveBackendMediaUrl(img.url)}
             alt={img.alt ?? product.name}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="64px"
           />
         </div>
@@ -122,8 +123,8 @@ export function WishlistDrawerContent({ onClose }: WishlistDrawerContentProps) {
             Nu ai produse în lista de dorințe.
           </p>
           <Button asChild>
-            <Link href="/produse" onClick={onClose}>
-              Explorează produse
+            <Link href="/categorii" onClick={onClose}>
+              Explorează categorii
             </Link>
           </Button>
         </div>

@@ -20,7 +20,7 @@ export function DealsSection() {
           Reduceri și oferte speciale – revino curând pentru promoții actualizate.
         </p>
         <Button asChild>
-          <Link href="/produse">Vezi produsele</Link>
+          <Link href="/categorii">Vezi categoriile</Link>
         </Button>
       </div>
     </section>

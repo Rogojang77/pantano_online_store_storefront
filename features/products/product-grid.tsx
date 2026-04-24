@@ -14,6 +14,7 @@ import type { ProductSortKey } from '@/types/store';
 import { ProductCard } from '@/features/products/product-card';
 import { ProductGridSkeleton } from '@/features/products/product-grid-skeleton';
 import { Pagination } from '@/components/layout/pagination';
+import { useMemo } from 'react';
 
 const sortOptions: { value: ProductSortKey; label: string }[] = [
   { value: 'relevance', label: 'Relevanță' },
@@ -28,7 +29,7 @@ interface ProductGridProps {
   page: number;
   limit: number;
   categoryId?: string;
-  brandId?: string;
+  brandIds?: string[];
   attributeValueIds?: string[];
   sort?: ProductSortKey;
   /**
@@ -39,18 +40,21 @@ interface ProductGridProps {
   groupedByCategory?: boolean;
   /** If provided, hide the heading for this category group (page already has an H1). */
   currentCategoryId?: string;
+  /** When false, hide removable brand chips (e.g. dedicated brand listing page). */
+  showBrandChips?: boolean;
 }
 
 export function ProductGrid({
   page,
   limit,
   categoryId,
-  brandId,
+  brandIds,
   attributeValueIds,
   sort = 'relevance',
   includeDescendants,
   groupedByCategory,
   currentCategoryId,
+  showBrandChips = true,
 }: ProductGridProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -58,22 +62,34 @@ export function ProductGrid({
 
   const mapSort = (s: ProductSortKey) => {
     switch (s) {
+      case 'relevance':
+        return { sortBy: 'relevance' as const };
+      case 'price_asc':
+        return { sortBy: 'price' as const, sortDir: 'asc' as const };
+      case 'price_desc':
+        return { sortBy: 'price' as const, sortDir: 'desc' as const };
       case 'newest':
         return { sortBy: 'createdAt' as const, sortDir: 'desc' as const };
       case 'name_asc':
         return { sortBy: 'name' as const, sortDir: 'asc' as const };
       case 'name_desc':
         return { sortBy: 'name' as const, sortDir: 'desc' as const };
-      // Backend doesn't support price-based ordering yet. Keep backend default.
-      case 'price_asc':
-      case 'price_desc':
-      case 'relevance':
       default:
         return {};
     }
   };
 
   const sortParams = mapSort(sort);
+  const selectedBrandIds = useMemo(() => {
+    const brandIdsFromQuery = (searchParams.get('brandIds') ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
+    const legacyBrandId = searchParams.get('brandId');
+    return Array.from(
+      new Set([legacyBrandId, ...brandIdsFromQuery, ...(brandIds ?? [])].filter((id): id is string => Boolean(id)))
+    );
+  }, [brandIds, searchParams]);
 
   const { data, isPending } = useQuery({
     queryKey: [
@@ -82,7 +98,7 @@ export function ProductGrid({
       page,
       limit,
       categoryId,
-      brandId,
+      selectedBrandIds.join(','),
       sort,
       includeDescendants,
       (attributeValueIds ?? []).join(','),
@@ -92,7 +108,7 @@ export function ProductGrid({
         page,
         limit,
         categoryId,
-        brandId,
+        brandIds: selectedBrandIds,
         attributeValueIds,
         status: 'ACTIVE',
         ...(includeDescendants === true ? { includeDescendants: true } : {}),
@@ -101,15 +117,51 @@ export function ProductGrid({
       }),
   });
 
+  const { data: brandFacets = [] } = useQuery({
+    queryKey: [
+      'products',
+      'brandFacets',
+      categoryId ?? null,
+      includeDescendants === true,
+      (attributeValueIds ?? []).join(','),
+    ],
+    queryFn: () =>
+      productsApi.brandFacets({
+        categoryId,
+        ...(includeDescendants === true ? { includeDescendants: true } : {}),
+        attributeValueIds,
+        status: 'ACTIVE',
+      }),
+  });
+
   const updateSort = (value: string) => {
     const next = new URLSearchParams(searchParams.toString());
     next.set('sort', value);
     next.delete('page');
-    router.push(`${pathname}?${next.toString()}`);
+    const query = next.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  };
+
+  const setSelectedBrandIds = (nextBrandIds: string[]) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (nextBrandIds.length > 0) next.set('brandIds', nextBrandIds.join(','));
+    else next.delete('brandIds');
+    next.delete('brandId');
+    next.delete('page');
+    const query = next.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  };
+
+  const removeBrand = (brandId: string) => {
+    setSelectedBrandIds(selectedBrandIds.filter((id) => id !== brandId));
   };
 
   const meta = data?.meta;
   const products = data?.data ?? [];
+  const brandLabelById = useMemo(
+    () => new Map(brandFacets.map((brand) => [brand.id, brand.name])),
+    [brandFacets]
+  );
 
   const groups = (() => {
     if (!groupedByCategory) return null;
@@ -156,6 +208,29 @@ export function ProductGrid({
           </SelectContent>
         </Select>
       </div>
+      {showBrandChips && selectedBrandIds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {selectedBrandIds.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => removeBrand(id)}
+              className="inline-flex items-center rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-sm text-primary-700 hover:bg-primary-100 dark:border-primary-800 dark:bg-primary-950/30 dark:text-primary-300 dark:hover:bg-primary-900/40"
+              aria-label={`Elimină brandul ${brandLabelById.get(id) ?? id}`}
+            >
+              {brandLabelById.get(id) ?? id}
+              <span className="ml-2 text-xs">x</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setSelectedBrandIds([])}
+            className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {isPending ? (
         <ProductGridSkeleton count={limit} />

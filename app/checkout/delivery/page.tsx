@@ -20,6 +20,7 @@ export default function CheckoutDeliveryPage() {
   const deliveryMethod = useCheckoutStore((s) => s.deliveryMethod);
   const deliveryFee = useCheckoutStore((s) => s.deliveryFee);
   const setDelivery = useCheckoutStore((s) => s.setDelivery);
+  const setPaymentMethod = useCheckoutStore((s) => s.setPaymentMethod);
   const items = useCartStore((s) => s.items);
 
   const [options, setOptions] = useState<DeliveryOption[]>([]);
@@ -44,7 +45,8 @@ export default function CheckoutDeliveryPage() {
     const opt = options.find((o) => o.id === selectedId);
     if (!opt) return;
     setDelivery(opt.id as 'STANDARD' | 'EXPRESS', parseFloat(opt.fee));
-    router.push('/checkout/payment');
+    setPaymentMethod('CARD');
+    router.push('/checkout/review');
   };
 
   return (
@@ -89,7 +91,7 @@ export default function CheckoutDeliveryPage() {
           Înapoi
         </Button>
         <Button type="submit" disabled={!selectedId || loading}>
-          Continuă la plată
+          Continuă la confirmare
         </Button>
       </div>
     </form>
