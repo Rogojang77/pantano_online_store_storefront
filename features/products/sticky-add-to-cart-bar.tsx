@@ -6,7 +6,6 @@ import { ShoppingCart } from 'lucide-react';
 import type { Product, ProductImage, ProductVariant } from '@/types/api';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
-import { useCartStore, useUIStore } from '@/store';
 import { cn } from '@/lib/utils';
 import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 
@@ -14,7 +13,12 @@ interface StickyAddToCartBarProps {
   product: Product;
   variant: ProductVariant | null;
   quantity: number;
+  /** Limită pentru selectorul +/- (ex. 99) */
+  maxQuantity: number;
+  /** Poate adăuga în coș (există stoc rămas) */
+  canAddToCart: boolean;
   onQuantityChange: (delta: number) => void;
+  onRequestAddToCart: () => void;
   /** Ref to the main CTA block - when it's out of view, show sticky bar */
   ctaRef: React.RefObject<HTMLElement | null>;
   className?: string;
@@ -24,13 +28,14 @@ export function StickyAddToCartBar({
   product,
   variant,
   quantity,
+  maxQuantity,
+  canAddToCart,
   onQuantityChange,
+  onRequestAddToCart,
   ctaRef,
   className,
 }: StickyAddToCartBarProps) {
   const [visible, setVisible] = useState(false);
-  const addItem = useCartStore((s) => s.addItem);
-  const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -50,24 +55,9 @@ export function StickyAddToCartBar({
   }, [ctaRef]);
 
   const inStock = variant ? variant.stockQuantity > 0 : false;
+  const canAdd = inStock && canAddToCart;
   const price = variant?.price;
   const primaryImage = product.images?.find((i) => i.isPrimary) ?? product.images?.[0];
-
-  const handleAddToCart = () => {
-    if (!variant) return;
-    addItem({
-      variantId: variant.id,
-      productId: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: variant.price,
-      imageUrl: primaryImage?.url,
-      ean: variant.ean ?? variant.sku,
-      sku: variant.sku,
-      quantity,
-    });
-    setCartDrawerOpen(true);
-  };
 
   if (!visible) return null;
 
@@ -116,7 +106,8 @@ export function StickyAddToCartBar({
             <button
               type="button"
               onClick={() => onQuantityChange(1)}
-              className="flex h-9 w-9 items-center justify-center text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              disabled={quantity >= maxQuantity}
+              className="flex h-9 w-9 items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-neutral-700"
               aria-label="Mărește cantitatea"
             >
               +
@@ -124,8 +115,8 @@ export function StickyAddToCartBar({
           </div>
           <Button
             size="sm"
-            onClick={handleAddToCart}
-            disabled={!inStock}
+            onClick={onRequestAddToCart}
+            disabled={!canAdd}
             className="shrink-0"
           >
             <ShoppingCart className="h-4 w-4" />

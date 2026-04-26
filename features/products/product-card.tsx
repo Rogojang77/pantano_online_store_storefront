@@ -52,6 +52,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const compareAtPrice = variant?.compareAtPrice;
   const stockQuantity = variant?.stockQuantity ?? 0;
   const inStock = stockQuantity > 0;
+  const maxAddable = Math.max(0, stockQuantity - cartQty);
   const img = product.images?.find((i) => i.isPrimary) ?? product.images?.[0];
   const weightKg =
     variant?.weightOverride != null
@@ -68,16 +69,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (variant) {
-      addItem({ ...cartItemPayload(product, variant, img), quantity: 1 });
-      setCartDrawerOpen(true);
-    }
+    if (!variant || maxAddable < 1) return;
+    addItem({ ...cartItemPayload(product, variant, img), quantity: 1 });
+    setCartDrawerOpen(true);
   };
 
   const handleIncrease = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (variant) {
+    if (variant && cartQty < stockQuantity) {
       addItem({ ...cartItemPayload(product, variant, img), quantity: 1 });
       setCartDrawerOpen(true);
     }
@@ -181,7 +181,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
                   : 'text-green-600 dark:text-green-400'
               )}
             >
-              {stockQuantity < 5 ? 'Stoc limitat' : 'În stoc'}
+              {stockQuantity}{' '}
+              {stockQuantity === 1 ? 'buc. disponibilă' : 'buc. disponibile'}
+              {stockQuantity < 5 && ` · stoc redus`}
             </span>
           )}
           <span className="flex items-center gap-0.5 text-xs text-neutral-500">
@@ -195,7 +197,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
               size="sm"
               className="flex-1 h-8 text-xs"
               onClick={handleAddToCart}
-              disabled={!inStock}
+              disabled={!inStock || maxAddable < 1}
             >
               <ShoppingCart className="h-3.5 w-3.5" />
               În coș
@@ -222,7 +224,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                 size="icon"
                 className="h-7 w-7 shrink-0 rounded-md"
                 onClick={handleIncrease}
-                disabled={!inStock}
+                disabled={!inStock || cartQty >= stockQuantity}
                 aria-label="Mărește cantitatea"
               >
                 <Plus className="h-3.5 w-3.5" />
