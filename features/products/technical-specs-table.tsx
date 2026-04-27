@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TechnicalSpecsTableProps {
@@ -9,14 +10,48 @@ interface TechnicalSpecsTableProps {
 
 export function TechnicalSpecsTable({ specs, className }: TechnicalSpecsTableProps) {
   const entries = extractSpecEntries(specs);
+  const groupedEntries = useMemo(() => groupEntriesBySection(entries), [entries]);
+  const sectionNames = useMemo(() => Object.keys(groupedEntries), [groupedEntries]);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   if (entries.length === 0) return null;
 
+  const selectedSection =
+    activeSection && groupedEntries[activeSection]
+      ? activeSection
+      : sectionNames[0] ?? null;
+  const visibleEntries = selectedSection ? groupedEntries[selectedSection] : entries;
+  const shouldRenderSectionTabs = sectionNames.length > 1;
+
   return (
-    <div className={cn('overflow-x-auto', className)}>
+    <div className={cn('space-y-4', className)}>
+      {shouldRenderSectionTabs && (
+        <div className="flex flex-wrap gap-2">
+          {sectionNames.map((section) => {
+            const isActive = section === selectedSection;
+            return (
+              <button
+                key={section}
+                type="button"
+                onClick={() => setActiveSection(section)}
+                className={cn(
+                  'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-500'
+                    : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800'
+                )}
+              >
+                {section}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="overflow-x-auto">
       <table className="w-full min-w-[280px] border-collapse text-sm">
         <tbody>
-          {entries.map(([key, value]) => (
+          {visibleEntries.map(([key, value]) => (
             <tr
               key={key}
               className="border-b border-neutral-200 dark:border-neutral-700"
@@ -31,6 +66,7 @@ export function TechnicalSpecsTable({ specs, className }: TechnicalSpecsTablePro
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -47,7 +83,7 @@ function formatSpecValue(value: unknown): string {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'boolean') return value ? 'Da' : 'Nu';
   if (Array.isArray(value)) {
-    return value.map((item) => String(item)).join(', ');
+    return value.map((item) => formatSpecValue(item)).join(', ');
   }
   if (typeof value === 'object') {
     return JSON.stringify(value);
@@ -57,13 +93,79 @@ function formatSpecValue(value: unknown): string {
 
 type SpecEntry = [string, unknown];
 
+function groupEntriesBySection(entries: SpecEntry[]): Record<string, SpecEntry[]> {
+  const grouped: Record<string, SpecEntry[]> = {};
+  for (const [key, value] of entries) {
+    const { section, label } = splitSpecKey(key);
+    if (!grouped[section]) grouped[section] = [];
+    grouped[section].push([label, value]);
+  }
+  return grouped;
+}
+
+function splitSpecKey(key: string): { section: string; label: string } {
+  const parts = key.split(' - ').map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return {
+      section: formatSpecKey(parts[0]),
+      label: formatSpecKey(parts.slice(1).join(' - ')),
+    };
+  }
+
+  return {
+    section: 'Specificații',
+    label: formatSpecKey(key),
+  };
+}
+
+/** Rânduri din technicalSpecs.adiana.informationsSuplimentare (Greutate, Brand, EAN, …). */
+function extractAdianaInformativeEntries(specs: Record<string, unknown>): SpecEntry[] {
+  const ad = asRecord(specs.adiana);
+  const inf = asRecord(ad?.informationsSuplimentare);
+  if (!inf) return [];
+  const entries: SpecEntry[] = [];
+  for (const [k, v] of Object.entries(inf)) {
+    if (!isDisplayable(v)) continue;
+    entries.push([`Informații suplimentare - ${k}`, v]);
+  }
+  return entries;
+}
+
+/** Evită dublarea: obiectul e listat ca rânduri de mai sus, nu ca JSON compact. */
+function stripAdianaInformative(
+  specs: Record<string, unknown>,
+): Record<string, unknown> {
+  const ad = asRecord(specs.adiana);
+  if (!ad || !('informationsSuplimentare' in ad)) return specs;
+  const { informationsSuplimentare: _inf, ...restAd } = ad;
+  void _inf;
+  return { ...specs, adiana: restAd };
+}
+
+/**
+ * Technical metadata from imports (source/sourceUrl/sourceCategories) is useful in admin,
+ * but should not be shown to shoppers on PDP.
+ */
+function stripAdianaMetadata(specs: Record<string, unknown>): Record<string, unknown> {
+  if (!('adiana' in specs)) return specs;
+  const { adiana: _adiana, ...rest } = specs;
+  void _adiana;
+  return rest;
+}
+
 function extractSpecEntries(specs: Record<string, unknown>): SpecEntry[] {
-  const prioritized = [
-    ...extractIcecatFeatureGroupEntries(specs),
-    ...extractOdooDetailEntries(specs),
-  ];
-  if (prioritized.length > 0) return prioritized;
-  return flattenEntries(specs);
+  const informative = extractAdianaInformativeEntries(specs);
+  const icecat = extractIcecatFeatureGroupEntries(specs);
+  const odoo = extractOdooDetailEntries(specs);
+  const prioritized = [...icecat, ...odoo];
+  if (prioritized.length > 0) {
+    return [...informative, ...prioritized];
+  }
+  const shopperSpecs = stripAdianaMetadata(stripAdianaInformative(specs));
+  if (informative.length > 0) {
+    return [...informative, ...flattenEntries(shopperSpecs)];
+  }
+  return flattenEntries(shopperSpecs);
 }
 
 function extractIcecatFeatureGroupEntries(specs: Record<string, unknown>): SpecEntry[] {

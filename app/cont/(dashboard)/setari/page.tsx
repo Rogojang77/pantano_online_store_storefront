@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -9,14 +9,19 @@ import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/store';
+import type { AccountType } from '@/types/api';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { Label } from '@/components/ui';
 
-const profileSchema = z.object({
+const profileFormFieldsSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   phone: z.string().optional(),
+  companyName: z.string().optional(),
+  companyVatId: z.string().optional(),
+  companyTradeRegister: z.string().optional(),
+  isVatPayer: z.boolean().optional(),
 });
 
 const changePasswordSchema = z
@@ -30,7 +35,7 @@ const changePasswordSchema = z
     path: ['confirmPassword'],
   });
 
-type ProfileForm = z.infer<typeof profileSchema>;
+type ProfileForm = z.infer<typeof profileFormFieldsSchema>;
 type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 export default function AccountSettingsPage() {
@@ -44,10 +49,42 @@ export default function AccountSettingsPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const accountTypeRef = useRef<AccountType | undefined>(undefined);
+  accountTypeRef.current = user?.accountType;
+
+  const profileSchema = useMemo(
+    () =>
+      profileFormFieldsSchema.superRefine((data, ctx) => {
+        if (accountTypeRef.current !== 'COMPANY') return;
+        if (!data.companyName?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Introdu denumirea firmei',
+            path: ['companyName'],
+          });
+        }
+        if (!data.companyVatId?.trim()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Introdu CUI/CIF',
+            path: ['companyVatId'],
+          });
+        }
+      }),
+    [],
+  );
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { firstName: '', lastName: '', phone: '' },
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      companyName: '',
+      companyVatId: '',
+      companyTradeRegister: '',
+      isVatPayer: false,
+    },
   });
 
   const passwordForm = useForm<ChangePasswordForm>({
@@ -67,6 +104,10 @@ export default function AccountSettingsPage() {
       firstName: user.firstName ?? '',
       lastName: user.lastName ?? '',
       phone: user.phone ?? '',
+      companyName: user.companyName ?? '',
+      companyVatId: user.companyVatId ?? '',
+      companyTradeRegister: user.companyTradeRegister ?? '',
+      isVatPayer: user.isVatPayer ?? false,
     });
   }, [user, profileForm]);
 
@@ -79,6 +120,14 @@ export default function AccountSettingsPage() {
         firstName: data.firstName || undefined,
         lastName: data.lastName || undefined,
         phone: data.phone || undefined,
+        ...(user.accountType === 'COMPANY'
+          ? {
+              companyName: data.companyName?.trim() || undefined,
+              companyVatId: data.companyVatId?.trim() || undefined,
+              companyTradeRegister: data.companyTradeRegister?.trim() || undefined,
+              isVatPayer: data.isVatPayer,
+            }
+          : {}),
       });
       setAuth({
         id: updated.id,
@@ -90,6 +139,7 @@ export default function AccountSettingsPage() {
         companyName: updated.companyName ?? null,
         companyVatId: updated.companyVatId ?? null,
         companyTradeRegister: updated.companyTradeRegister ?? null,
+        isVatPayer: updated.isVatPayer ?? null,
       });
       setProfileSuccess(true);
     } catch {
@@ -144,6 +194,54 @@ export default function AccountSettingsPage() {
             <Label htmlFor="phone">Telefon</Label>
             <Input id="phone" type="tel" className="mt-1" {...profileForm.register('phone')} />
           </div>
+          {user?.accountType === 'COMPANY' && (
+            <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-800">
+              <h2 className="mb-4 text-base font-semibold text-neutral-900 dark:text-neutral-100">Date firmă</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <Label htmlFor="companyName">Denumire firmă *</Label>
+                  <Input id="companyName" className="mt-1" {...profileForm.register('companyName')} />
+                  {profileForm.formState.errors.companyName && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {profileForm.formState.errors.companyName.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="companyVatId">CUI / CIF *</Label>
+                  <Input id="companyVatId" className="mt-1" {...profileForm.register('companyVatId')} />
+                  {profileForm.formState.errors.companyVatId && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {profileForm.formState.errors.companyVatId.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="companyTradeRegister">Nr. Reg. Comerțului</Label>
+                  <Input
+                    id="companyTradeRegister"
+                    className="mt-1"
+                    {...profileForm.register('companyTradeRegister')}
+                  />
+                </div>
+                <div className="sm:col-span-2 flex items-center justify-between gap-4">
+                  <div>
+                    <Label className="font-medium">Plătitor de TVA</Label>
+                    <p className="text-sm text-neutral-500">Folosit la afișarea prețurilor cu TVA sau fără.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 shrink-0 rounded border-neutral-300"
+                    checked={profileForm.watch('isVatPayer') ?? false}
+                    onChange={(e) =>
+                      profileForm.setValue('isVatPayer', e.target.checked, { shouldValidate: true, shouldDirty: true })
+                    }
+                    aria-label="Plătitor de TVA"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           <p className="text-sm text-neutral-500">Email: {user?.email ?? '—'}</p>
           <Button type="submit" disabled={profileForm.formState.isSubmitting}>
             Salvează modificările

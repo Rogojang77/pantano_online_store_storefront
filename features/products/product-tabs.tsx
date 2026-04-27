@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TechnicalSpecsTable } from './technical-specs-table';
 import type { Product } from '@/types/api';
 import { FileText, Download } from 'lucide-react';
+import { sanitizeProductDescriptionHtml } from '@/lib/product-html';
 
 interface ProductTabsProps {
   product: Product;
@@ -29,11 +30,13 @@ export function ProductTabs({ product, className }: ProductTabsProps) {
       </TabsList>
       <TabsContent value="description" className="mt-4">
         {product.description ? (
-          <div className="prose prose-neutral dark:prose-invert max-w-none">
-            <p className="text-neutral-600 dark:text-neutral-400 whitespace-pre-wrap">
-              {product.description}
-            </p>
-          </div>
+          <div
+            className="prose prose-neutral dark:prose-invert max-w-none text-neutral-600 dark:text-neutral-400"
+            // HTML from product catalog (WooCommerce / imports); stripped before inject
+            dangerouslySetInnerHTML={{
+              __html: sanitizeProductDescriptionHtml(product.description),
+            }}
+          />
         ) : (
           <p className="text-neutral-500 dark:text-neutral-400">
             Nu există descriere disponibilă.

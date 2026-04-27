@@ -241,6 +241,7 @@ export const authApi = {
     companyName?: string;
     companyVatId?: string;
     companyTradeRegister?: string;
+    isVatPayer?: boolean;
     newsletterConsent?: boolean;
     notifyOrderStatus?: boolean;
     language?: string;

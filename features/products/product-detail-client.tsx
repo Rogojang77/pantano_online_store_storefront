@@ -18,8 +18,10 @@ import { ProductBadges } from './product-badges';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
 import { AddToCartStockDialog } from '@/components/cart/add-to-cart-stock-dialog';
-import { useCartStore, useWishlistStore, useUIStore } from '@/store';
+import { useCartStore, useWishlistStore, useUIStore, useAuthStore } from '@/store';
 import { cn } from '@/lib/utils';
+import { getVatAwarePrices } from '@/lib/pricing';
+import { htmlToPlainTextExcerpt } from '@/lib/product-html';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -64,13 +66,18 @@ export function ProductDetailClient({
   const removeWishlist = useWishlistStore((s) => s.remove);
   const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
   const setWishlistDrawerOpen = useUIStore((s) => s.setWishlistDrawerOpen);
+  const user = useAuthStore((s) => s.user);
   const showWishlist = mounted && hasWishlist;
 
   const variant =
     product.variants?.find((v) => v.id === selectedVariantId) ??
     product.variants?.[0];
-  const price = variant?.price;
+  const prices = getVatAwarePrices(variant);
+  const displayPrice = prices.gross;
   const compareAtPrice = variant?.compareAtPrice;
+  const showCompanyNetPrice = user?.accountType === 'COMPANY' && prices.net != null;
+  const vatStatusText = user?.isVatPayer === true ? 'Companie plătitoare de TVA' : null;
+
   const inStock = (variant?.stockQuantity ?? 0) > 0;
   const stockQuantity = variant?.stockQuantity ?? 0;
   const maxAddable = Math.max(0, stockQuantity - cartQty);
@@ -174,7 +181,7 @@ export function ProductDetailClient({
             {stockQuantity > 0 && (
               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 · {stockQuantity}{' '}
-                {stockQuantity === 1 ? 'bucată disponibilă' : 'bucăți disponibile'}
+                {stockQuantity === 1 ? 'bucată disponibilă în magazin' : 'bucăți disponibile în magazin'}
                 {cartQty > 0 && (
                   <span className="text-neutral-500">
                     {' '}
@@ -186,18 +193,24 @@ export function ProductDetailClient({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
-            {price && (
+            {displayPrice != null && (
               <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                {price} {siteConfig.currency}
+                {displayPrice.toFixed(2)} {siteConfig.currency}
               </span>
             )}
             {compareAtPrice &&
-              parseFloat(compareAtPrice) > parseFloat(price ?? '0') && (
+              parseFloat(compareAtPrice) > (displayPrice ?? 0) && (
                 <span className="text-lg text-neutral-500 line-through">
                   {compareAtPrice} {siteConfig.currency}
                 </span>
               )}
           </div>
+          {showCompanyNetPrice && (
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              {prices.net!.toFixed(2)} {siteConfig.currency} fără TVA
+              {vatStatusText ? ` · ${vatStatusText}` : ''}
+            </p>
+          )}
 
           {product.variants && product.variants.length > 1 && (
             <div className="mt-6">
@@ -276,6 +289,13 @@ export function ProductDetailClient({
             </Button>
           </div>
 
+          {/* Short description: first paragraph or first 200 chars */}
+          {product.description && (
+            <p className="mt-4 text-neutral-600 dark:text-neutral-400 line-clamp-3">
+              {htmlToPlainTextExcerpt(product.description, 200)}
+            </p>
+          )}
+
           <ShareButtons
             url={productUrl}
             title={product.name}
@@ -310,14 +330,6 @@ export function ProductDetailClient({
           </div>
         </div>
       </article>
-
-      {/* Short description: first paragraph or first 150 chars */}
-      {product.description && (
-        <p className="mt-8 text-neutral-600 dark:text-neutral-400 line-clamp-3">
-          {product.description.slice(0, 200)}
-          {product.description.length > 200 ? '…' : ''}
-        </p>
-      )}
 
       <div className="mt-10">
         <ProductTabs product={product} />

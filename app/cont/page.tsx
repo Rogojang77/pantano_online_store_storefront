@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
 import { authApi, wishlistApi } from '@/lib/api';
+import { toast } from 'sonner';
 import { useAuthStore, useWishlistStore } from '@/store';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
@@ -43,25 +44,8 @@ function AccountHubContent() {
     if (user) {
       const redirect = searchParams.get('redirect') || '/cont/dashboard';
       router.replace(redirect);
-      return;
     }
-    authApi
-      .profile()
-      .then((profile) => {
-        setAuth({
-          id: profile.id,
-          email: profile.email,
-          firstName: profile.firstName ?? null,
-          lastName: profile.lastName ?? null,
-          phone: profile.phone ?? null,
-          accountType: profile.accountType,
-          companyName: profile.companyName ?? null,
-          companyVatId: profile.companyVatId ?? null,
-          companyTradeRegister: profile.companyTradeRegister ?? null,
-        });
-      })
-      .catch(() => {});
-  }, [user, router, searchParams, setAuth]);
+  }, [user, router, searchParams]);
 
   const onSubmit = async (data: LoginForm) => {
     setError(null);
@@ -77,11 +61,14 @@ function AccountHubContent() {
         companyName: res.user?.companyName ?? null,
         companyVatId: res.user?.companyVatId ?? null,
         companyTradeRegister: res.user?.companyTradeRegister ?? null,
+        isVatPayer: res.user?.isVatPayer ?? null,
       });
       const localItems = useWishlistStore.getState().items;
       const variantIds = localItems.filter((i) => i.variantId).map((i) => i.variantId as string);
       if (variantIds.length > 0) {
-        wishlistApi.sync(variantIds).catch(() => {});
+        wishlistApi.sync(variantIds).catch(() => {
+          toast.error('Nu am putut sincroniza lista de dorințe. Poți reîncerca din cont.');
+        });
       }
       const redirect = searchParams.get('redirect') || '/cont/dashboard';
       router.push(redirect);

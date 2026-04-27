@@ -8,6 +8,7 @@ import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
+import { getVatAwarePrices } from '@/lib/pricing';
 
 interface StickyAddToCartBarProps {
   product: Product;
@@ -56,7 +57,8 @@ export function StickyAddToCartBar({
 
   const inStock = variant ? variant.stockQuantity > 0 : false;
   const canAdd = inStock && canAddToCart;
-  const price = variant?.price;
+  const prices = getVatAwarePrices(variant);
+  const displayPrice = prices.gross;
   const primaryImage = product.images?.find((i) => i.isPrimary) ?? product.images?.[0];
 
   if (!visible) return null;
@@ -84,9 +86,9 @@ export function StickyAddToCartBar({
           <p className="truncate font-medium text-neutral-900 dark:text-white">
             {product.name}
           </p>
-          {price && (
+          {displayPrice != null && (
             <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-              {price} {siteConfig.currency}
+              {displayPrice.toFixed(2)} {siteConfig.currency}
             </p>
           )}
         </div>

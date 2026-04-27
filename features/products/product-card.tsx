@@ -7,9 +7,10 @@ import { Heart, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
 import type { Product } from '@/types/api';
 import { siteConfig } from '@/config/site';
 import { Button, Badge, Stars } from '@/components/ui';
-import { useCartStore, useWishlistStore, useUIStore } from '@/store';
+import { useCartStore, useWishlistStore, useUIStore, useAuthStore } from '@/store';
 import { cn } from '@/lib/utils';
 import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
+import { getVatAwarePrices } from '@/lib/pricing';
 
 interface ProductCardProps {
   product: Product;
@@ -43,12 +44,14 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const removeWishlist = useWishlistStore((s) => s.remove);
   const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
   const setWishlistDrawerOpen = useUIStore((s) => s.setWishlistDrawerOpen);
+  const user = useAuthStore((s) => s.user);
 
   // Avoid hydration mismatch: wishlist is from localStorage, so server always renders "not in wishlist"
   const showWishlist = mounted && hasWishlist;
 
   const variant = product.variants?.[0];
-  const price = variant?.price;
+  const prices = getVatAwarePrices(variant);
+  const displayPrice = prices.gross;
   const compareAtPrice = variant?.compareAtPrice;
   const stockQuantity = variant?.stockQuantity ?? 0;
   const inStock = stockQuantity > 0;
@@ -61,9 +64,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
         ? parseFloat(String(product.weight))
         : null;
   const pricePerKg =
-    price && weightKg != null && weightKg > 0
-      ? (parseFloat(price) / weightKg).toFixed(2)
+    displayPrice != null && weightKg != null && weightKg > 0
+      ? (displayPrice / weightKg).toFixed(2)
       : null;
+  const showCompanyNetPrice = user?.accountType === 'COMPANY' && prices.net != null;
+  const vatStatusText = user?.isVatPayer === true ? 'plătitor TVA' : null;
   const reviewSummary = product.reviewSummary;
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -153,22 +158,30 @@ export function ProductCard({ product, className }: ProductCardProps) {
           </div>
         )}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          {price && (
+          {displayPrice != null && (
             <span className="text-base font-bold text-primary-600 dark:text-primary-400">
-              {price} {siteConfig.currency}
+              {displayPrice.toFixed(2)} {siteConfig.currency}
             </span>
           )}
-          {compareAtPrice && parseFloat(compareAtPrice) > parseFloat(price ?? '0') && (
+          {compareAtPrice && parseFloat(compareAtPrice) > (displayPrice ?? 0) && (
             <span className="text-xs text-neutral-500 line-through">
               {compareAtPrice} {siteConfig.currency}
             </span>
           )}
         </div>
+        {showCompanyNetPrice && (
+          <div className="mt-0.5 text-xs text-neutral-500">
+            <span>
+              {prices.net!.toFixed(2)} {siteConfig.currency} fără TVA
+              {vatStatusText ? ` · ${vatStatusText}` : ''}
+            </span>
+          </div>
+        )}
         <div className="mt-0.5 text-xs text-neutral-500">
           {pricePerKg != null ? (
             <span>{pricePerKg} {siteConfig.currency}/kg</span>
           ) : (
-            price && <span>{price} {siteConfig.currency}/buc</span>
+            displayPrice != null && <span>{displayPrice.toFixed(2)} {siteConfig.currency}/buc</span>
           )}
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -183,7 +196,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             >
               {stockQuantity}{' '}
               {stockQuantity === 1 ? 'buc. disponibilă' : 'buc. disponibile'}
-              {stockQuantity < 5 && ` · stoc redus`}
+              {stockQuantity < 5 && ` · stoc limitat`}
             </span>
           )}
           <span className="flex items-center gap-0.5 text-xs text-neutral-500">

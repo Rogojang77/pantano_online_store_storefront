@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { CreditCard } from 'lucide-react';
 import { useAuthStore, useCartStore, useCheckoutStore } from '@/store';
 import { ordersApi } from '@/lib/api';
 import { siteConfig } from '@/config/site';
@@ -118,7 +120,9 @@ export default function CheckoutReviewPage() {
         err && typeof err === 'object' && 'body' in err && err.body && typeof (err as { body: { message?: unknown } }).body?.message === 'string'
           ? (err as { body: { message: string } }).body.message
           : 'Nu s-a putut plasa comanda. Încearcă din nou.';
-      setError(Array.isArray(message) ? message.join(', ') : message);
+      const errText = Array.isArray(message) ? message.join(', ') : message;
+      setError(errText);
+      toast.error(errText);
     } finally {
       setPlacing(false);
     }
@@ -185,16 +189,32 @@ export default function CheckoutReviewPage() {
           </div>
 
           <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
-            <p className="text-sm">
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                Livrare:
-              </span>{' '}
+            <h2 className="mb-3 text-lg font-semibold text-neutral-900 dark:text-white">Livrare</h2>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300">
               {deliveryMethod ? DELIVERY_LABELS[deliveryMethod] ?? deliveryMethod : '—'}
             </p>
-            <p className="mt-1 text-sm">
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">Plată:</span>{' '}
-              Plată online cu cardul (debit / credit)
-            </p>
+          </div>
+
+          <div className="rounded-2xl border border-primary-200 bg-primary-50/50 p-6 dark:border-primary-900/40 dark:bg-primary-950/20">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-200"
+                aria-hidden
+              >
+                <CreditCard className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Plată</h2>
+                <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+                  Plata se face online, în siguranță, cu <strong>card bancar</strong> (debit sau
+                  credit), după ce apeși &quot;Plasează comanda&quot; — vei fi redirecționat spre
+                  procesatorul de plăți.
+                </p>
+                <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  Metodă: {paymentMethod === 'CARD' ? 'card' : (paymentMethod ?? 'card')}.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">

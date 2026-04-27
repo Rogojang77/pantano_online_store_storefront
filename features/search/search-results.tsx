@@ -7,13 +7,18 @@ import { ProductGridSkeleton } from '@/features/products/product-grid-skeleton';
 import { Pagination } from '@/components/layout/pagination';
 import { usePathname, useSearchParams } from 'next/navigation';
 
+import type { SuggestedCategoryLink } from './search-empty-recovery';
+import { SearchEmptyRecovery } from './search-empty-recovery';
+
 interface SearchResultsProps {
   query: string;
   page: number;
   limit: number;
+  /** Shown on zero hits */
+  emptyRecoveryCategories?: SuggestedCategoryLink[];
 }
 
-export function SearchResults({ query, page, limit }: SearchResultsProps) {
+export function SearchResults({ query, page, limit, emptyRecoveryCategories = [] }: SearchResultsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -30,11 +35,20 @@ export function SearchResults({ query, page, limit }: SearchResultsProps) {
   }
 
   if (products.length === 0) {
-    return <p className="py-12 text-center text-neutral-500">Niciun rezultat găsit.</p>;
+    return (
+      <div className="py-4">
+        <SearchEmptyRecovery query={query} categoryLinks={emptyRecoveryCategories} />
+      </div>
+    );
   }
 
   return (
     <>
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic>
+        {meta != null
+          ? `Găsite ${meta.total} ${meta.total === 1 ? 'rezultat' : 'rezultate'} pentru ${query}.`
+          : 'Rezultate actualizate.'}
+      </p>
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" role="list">
         {products.map((product) => (
           <li key={product.id}>

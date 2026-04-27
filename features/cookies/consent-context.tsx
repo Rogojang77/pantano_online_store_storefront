@@ -69,6 +69,19 @@ export function CookieConsentProvider({ children }: { children: ReactNode }) {
     setIsHydrated(true);
   }, []);
 
+  useEffect(() => {
+    if (!isHydrated) return;
+    const showBanner = consent.status === 'unset';
+    if (showBanner) {
+      document.body.style.setProperty('padding-bottom', '6.5rem');
+    } else {
+      document.body.style.removeProperty('padding-bottom');
+    }
+    return () => {
+      document.body.style.removeProperty('padding-bottom');
+    };
+  }, [isHydrated, consent.status]);
+
   const commitState = useCallback((next: CookieConsentState) => {
     setConsent(next);
     setDraft({
