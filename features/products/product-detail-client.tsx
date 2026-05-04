@@ -17,8 +17,13 @@ import { ProductQASection } from './product-qa-section';
 import { ProductBadges } from './product-badges';
 import { siteConfig } from '@/config/site';
 import { Button } from '@/components/ui';
-import { useCartStore, useWishlistStore, useUIStore } from '@/store';
+import { AddToCartStockDialog } from '@/components/cart/add-to-cart-stock-dialog';
+import { useCartStore, useWishlistStore, useUIStore, useAuthStore } from '@/store';
 import { cn } from '@/lib/utils';
+import { getVatAwarePrices } from '@/lib/pricing';
+import { htmlToPlainTextExcerpt } from '@/lib/product-html';
+import { trackEvent } from '@/lib/analytics';
+import { getOdooNewPrice } from '@/lib/odoo-pricing';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -47,42 +52,88 @@ export function ProductDetailClient({
     product.variants?.[0]?.id ?? null
   );
   const [quantity, setQuantity] = useState(1);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const ctaRef = useRef<HTMLDivElement>(null);
   useEffect(() => setMounted(true), []);
 
   const addItem = useCartStore((s) => s.addItem);
+  const cartQty = useCartStore((s) =>
+    selectedVariantId
+      ? (s.items.find((i) => i.variantId === selectedVariantId)?.quantity ?? 0)
+      : 0
+  );
   const hasWishlist = useWishlistStore((s) => s.has(product.id));
   const addWishlist = useWishlistStore((s) => s.add);
   const removeWishlist = useWishlistStore((s) => s.remove);
   const setCartDrawerOpen = useUIStore((s) => s.setCartDrawerOpen);
   const setWishlistDrawerOpen = useUIStore((s) => s.setWishlistDrawerOpen);
+  const user = useAuthStore((s) => s.user);
   const showWishlist = mounted && hasWishlist;
 
   const variant =
     product.variants?.find((v) => v.id === selectedVariantId) ??
     product.variants?.[0];
-  const price = variant?.price;
+  const prices = getVatAwarePrices(variant);
+  const displayPrice = prices.gross;
   const compareAtPrice = variant?.compareAtPrice;
+  const odooNewPrice = getOdooNewPrice(product);
+  const showCompanyNetPrice = user?.accountType === 'COMPANY' && prices.net != null;
+  const vatStatusText = user?.isVatPayer === true ? 'Companie plătitoare de TVA' : null;
+
   const inStock = (variant?.stockQuantity ?? 0) > 0;
   const stockQuantity = variant?.stockQuantity ?? 0;
+  const maxAddable = Math.max(0, stockQuantity - cartQty);
   const images = product.images ?? [];
   const primaryImage = images.find((i) => i.isPrimary) ?? images[0];
 
-  const handleAddToCart = () => {
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedVariantId]);
+
+  useEffect(() => {
+    trackEvent({
+      eventName: 'view_product',
+      productId: product.id,
+      source: `/produs/${product.slug}`,
+    });
+  }, [product.id, product.slug]);
+
+  const performAddToCart = () => {
     if (!variant) return;
+    const qty = Math.min(quantity, maxAddable);
+    if (qty < 1) return;
     addItem({
       variantId: variant.id,
       productId: product.id,
       name: product.name,
       slug: product.slug,
       price: variant.price,
+      stockQuantity: variant.stockQuantity,
       imageUrl: primaryImage?.url,
       ean: variant.ean ?? variant.sku,
       sku: variant.sku,
-      quantity,
+      quantity: qty,
+    });
+    trackEvent({
+      eventName: 'add_to_cart',
+      productId: product.id,
+      metadata: {
+        variantId: variant.id,
+        quantity: qty,
+        unitPrice: variant.price,
+      },
     });
     setCartDrawerOpen(true);
+  };
+
+  const requestAddToCart = () => {
+    if (!variant || !inStock || maxAddable < 1) return;
+    if (quantity <= maxAddable) {
+      performAddToCart();
+      return;
+    }
+    setStockDialogOpen(true);
   };
 
   const toggleWishlist = () => {
@@ -148,21 +199,44 @@ export function ProductDetailClient({
             >
               {getAvailabilityText(stockQuantity)}
             </span>
+            {stockQuantity > 0 && (
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                · {stockQuantity}{' '}
+                {stockQuantity === 1 ? 'bucată disponibilă în magazin' : 'bucăți disponibile în magazin'}
+                {cartQty > 0 && (
+                  <span className="text-neutral-500">
+                    {' '}
+                    ({cartQty} {cartQty === 1 ? 'în coș' : 'în coș'})
+                  </span>
+                )}
+              </span>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
-            {price && (
+            {displayPrice != null && (
               <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-                {price} {siteConfig.currency}
+                {displayPrice.toFixed(2)} {siteConfig.currency}
+              </span>
+            )}
+            {odooNewPrice != null && (
+              <span className="rounded bg-emerald-100 px-2 py-1 text-sm font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                Preț nou: {odooNewPrice.toFixed(2)} {siteConfig.currency}
               </span>
             )}
             {compareAtPrice &&
-              parseFloat(compareAtPrice) > parseFloat(price ?? '0') && (
+              parseFloat(compareAtPrice) > (displayPrice ?? 0) && (
                 <span className="text-lg text-neutral-500 line-through">
                   {compareAtPrice} {siteConfig.currency}
                 </span>
               )}
           </div>
+          {showCompanyNetPrice && (
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              {prices.net!.toFixed(2)} {siteConfig.currency} fără TVA
+              {vatStatusText ? ` · ${vatStatusText}` : ''}
+            </p>
+          )}
 
           {product.variants && product.variants.length > 1 && (
             <div className="mt-6">
@@ -205,8 +279,9 @@ export function ProductDetailClient({
               </span>
               <button
                 type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="flex h-10 w-10 items-center justify-center text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                disabled={quantity >= 99}
+                className="flex h-10 w-10 items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-neutral-700"
                 aria-label="Mărește cantitatea"
               >
                 +
@@ -215,8 +290,8 @@ export function ProductDetailClient({
             <Button
               size="lg"
               className="flex-1"
-              onClick={handleAddToCart}
-              disabled={!inStock}
+              onClick={requestAddToCart}
+              disabled={!inStock || maxAddable < 1}
             >
               <ShoppingCart className="h-4 w-4" />
               Adaugă în coș
@@ -239,6 +314,13 @@ export function ProductDetailClient({
               />
             </Button>
           </div>
+
+          {/* Short description: first paragraph or first 200 chars */}
+          {product.description && (
+            <p className="mt-4 text-neutral-600 dark:text-neutral-400 line-clamp-3">
+              {htmlToPlainTextExcerpt(product.description, 200)}
+            </p>
+          )}
 
           <ShareButtons
             url={productUrl}
@@ -275,14 +357,6 @@ export function ProductDetailClient({
         </div>
       </article>
 
-      {/* Short description: first paragraph or first 150 chars */}
-      {product.description && (
-        <p className="mt-8 text-neutral-600 dark:text-neutral-400 line-clamp-3">
-          {product.description.slice(0, 200)}
-          {product.description.length > 200 ? '…' : ''}
-        </p>
-      )}
-
       <div className="mt-10">
         <ProductTabs product={product} />
       </div>
@@ -311,13 +385,28 @@ export function ProductDetailClient({
         className="mt-14"
       />
 
+      <AddToCartStockDialog
+        open={stockDialogOpen}
+        onOpenChange={setStockDialogOpen}
+        productName={product.name}
+        stockQuantity={stockQuantity}
+        quantityInCart={cartQty}
+        maxAddable={maxAddable}
+        selectedQuantity={quantity}
+        onConfirm={performAddToCart}
+        confirmDisabled={!inStock || maxAddable < 1}
+      />
+
       <StickyAddToCartBar
         product={product}
         variant={variant ?? null}
         quantity={quantity}
+        maxQuantity={99}
+        canAddToCart={maxAddable >= 1}
         onQuantityChange={(delta) =>
           setQuantity((q) => Math.max(1, Math.min(99, q + delta)))
         }
+        onRequestAddToCart={requestAddToCart}
         ctaRef={ctaRef}
       />
     </>

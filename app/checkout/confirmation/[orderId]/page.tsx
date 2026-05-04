@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ordersApi } from '@/lib/api';
 import { useAuthStore, useCartStore, useCheckoutStore } from '@/store';
 import type { Order } from '@/types/api';
 import { Button } from '@/components/ui';
+import { trackEvent } from '@/lib/analytics';
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   PENDING: 'În așteptare',
@@ -27,6 +28,7 @@ export default function CheckoutConfirmationPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasTrackedPurchase = useRef(false);
 
   useEffect(() => {
     clearCart();
@@ -77,6 +79,22 @@ export default function CheckoutConfirmationPage() {
 
     return () => window.clearInterval(interval);
   }, [orderId, guestEmail, order, user]);
+
+  useEffect(() => {
+    if (!orderId || !order) return;
+    if (hasTrackedPurchase.current) return;
+    hasTrackedPurchase.current = true;
+    trackEvent({
+      eventName: 'purchase',
+      orderId,
+      metadata: {
+        orderNumber: order.orderNumber,
+        paymentStatus: order.paymentStatus,
+        total: order.total,
+      },
+      source: `/checkout/confirmation/${orderId}`,
+    });
+  }, [orderId, order]);
 
   if (loading) {
     return (

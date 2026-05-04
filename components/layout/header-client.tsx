@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { ShoppingCart, Heart, User, ChevronDown } from 'lucide-react';
 import { useCartStore, useWishlistStore, useAuthStore, useUIStore } from '@/store';
 import { authApi } from '@/lib/api';
@@ -16,7 +17,6 @@ export function HeaderClient() {
   const itemCount = useCartStore((s) => s.itemCount());
   const wishlistCount = useWishlistStore((s) => s.items.length);
   const user = useAuthStore((s) => s.user);
-  const setAuth = useAuthStore((s) => s.setAuth);
   const logout = useAuthStore((s) => s.logout);
   const [open, setOpen] = useState(false);
   const cartDrawerOpen = useUIStore((s) => s.cartDrawerOpen);
@@ -31,26 +31,6 @@ export function HeaderClient() {
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      authApi.profile()
-        .then((profile) => {
-          setAuth({
-            id: profile.id,
-            email: profile.email,
-            firstName: profile.firstName ?? null,
-            lastName: profile.lastName ?? null,
-            phone: profile.phone ?? null,
-            accountType: profile.accountType,
-            companyName: profile.companyName ?? null,
-            companyVatId: profile.companyVatId ?? null,
-            companyTradeRegister: profile.companyTradeRegister ?? null,
-          });
-        })
-        .catch(() => {});
-    }
-  }, [user, setAuth]);
-
-  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     }
@@ -60,7 +40,9 @@ export function HeaderClient() {
 
   const handleLogout = () => {
     setOpen(false);
-    authApi.logout().catch(() => {});
+    authApi.logout().catch(() => {
+      toast.error('Deconectarea de pe server a eșuat, dar ai fost delogat local.');
+    });
     logout();
     router.push('/');
     router.refresh();

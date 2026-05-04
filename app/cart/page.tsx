@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { useAuthStore, useCartStore } from '@/store';
 import { Button, Input } from '@/components/ui';
 import { CartLineItem } from '@/components/cart/cart-line-item';
@@ -80,6 +81,7 @@ export default function CartPage() {
       }
     } catch {
       setCouponError('Nu s-a putut aplica codul');
+      toast.error('Nu s-a putut aplica codul. Verifică conexiunea și încearcă din nou.');
     } finally {
       setCouponLoading(false);
     }
@@ -93,7 +95,7 @@ export default function CartPage() {
       try {
         await cartApi.removeCoupon();
       } catch {
-        // ignore
+        toast.error('Nu am putut elimina codul. Încearcă din nou.');
       }
     }
   };

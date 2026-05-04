@@ -117,6 +117,9 @@ export function WishlistDrawerContent({ onClose }: WishlistDrawerContentProps) {
       <div className="flex h-full flex-col">
         <SheetHeader className="shrink-0 border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
           <SheetTitle>Lista de dorințe</SheetTitle>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Lista e salvată pe acest dispozitiv; se sincronizează la cont când ești conectat(ă).
+          </p>
         </SheetHeader>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-8 text-center">
           <p className="text-neutral-600 dark:text-neutral-400">
@@ -136,6 +139,9 @@ export function WishlistDrawerContent({ onClose }: WishlistDrawerContentProps) {
     <div className="flex h-full flex-col">
       <SheetHeader className="shrink-0 border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
         <SheetTitle>Lista de dorințe ({items.length})</SheetTitle>
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+          Salvată pe acest dispozitiv; conectează-te ca să sincronizăm cu contul, unde e disponibil.
+        </p>
       </SheetHeader>
       <ul className="flex-1 space-y-3 overflow-y-auto p-4" role="list">
         {items.map((item) => (

@@ -2,7 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
+import { Toaster } from 'sonner';
 import { CookieConsentProvider } from '@/features/cookies/consent-context';
+import { SessionProfileBootstrap } from '@/components/session-profile-bootstrap';
 
 const defaultOptions = {
   defaultOptions: {
@@ -19,7 +21,11 @@ export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient(defaultOptions));
   return (
     <QueryClientProvider client={queryClient}>
-      <CookieConsentProvider>{children}</CookieConsentProvider>
+      <CookieConsentProvider>
+        <SessionProfileBootstrap />
+        {children}
+        <Toaster richColors closeButton position="top-center" />
+      </CookieConsentProvider>
     </QueryClientProvider>
   );
 }

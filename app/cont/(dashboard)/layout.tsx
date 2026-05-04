@@ -66,6 +66,7 @@ export default function AccountDashboardLayout({
           companyName: profile.companyName ?? null,
           companyVatId: profile.companyVatId ?? null,
           companyTradeRegister: profile.companyTradeRegister ?? null,
+          isVatPayer: profile.isVatPayer ?? null,
         });
       })
       .catch(() => {

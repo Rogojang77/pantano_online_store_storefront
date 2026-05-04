@@ -49,6 +49,7 @@ export default function CheckoutLoginPage() {
         companyName: res.user?.companyName ?? null,
         companyVatId: res.user?.companyVatId ?? null,
         companyTradeRegister: res.user?.companyTradeRegister ?? null,
+        isVatPayer: res.user?.isVatPayer ?? null,
       });
       router.push('/checkout/address');
       router.refresh();

@@ -124,7 +124,10 @@ export interface ProductVariant {
   ean: string | null;
   sku: string;
   name: string | null;
+  /** Price without VAT (net). */
   price: string;
+  /** Price with VAT (gross). */
+  priceWithTax?: string | null;
   compareAtPrice: string | null;
   stockQuantity: number;
   isActive: boolean;
@@ -209,6 +212,8 @@ export interface User {
   companyName?: string | null;
   companyVatId?: string | null;
   companyTradeRegister?: string | null;
+  /** Relevant for COMPANY accounts: VAT payer status. */
+  isVatPayer?: boolean | null;
   newsletterConsent?: boolean;
   notifyOrderStatus?: boolean;
   language?: string;
@@ -266,6 +271,16 @@ export interface SearchSuggestionsResult {
   products: Product[];
   categories: SearchSuggestionsCategory[];
   totalProducts: number;
+}
+
+export interface PromotionSummary {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  value: string;
+  validTo: string;
 }
 
 // --- CMS blocks (headless-ready) ---

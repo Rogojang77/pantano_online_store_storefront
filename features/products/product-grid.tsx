@@ -15,6 +15,7 @@ import { ProductCard } from '@/features/products/product-card';
 import { ProductGridSkeleton } from '@/features/products/product-grid-skeleton';
 import { Pagination } from '@/components/layout/pagination';
 import { useMemo } from 'react';
+import { ErrorState } from '@/components/feedback/error-state';
 
 const sortOptions: { value: ProductSortKey; label: string }[] = [
   { value: 'relevance', label: 'Relevanță' },
@@ -91,7 +92,7 @@ export function ProductGrid({
     );
   }, [brandIds, searchParams]);
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: [
       'products',
       'list',
@@ -234,6 +235,14 @@ export function ProductGrid({
 
       {isPending ? (
         <ProductGridSkeleton count={limit} />
+      ) : isError ? (
+        <ErrorState
+          title="Produsele nu pot fi încărcate"
+          error={error}
+          onRetry={() => {
+            void refetch();
+          }}
+        />
       ) : products.length === 0 ? (
         <p className="py-12 text-center text-neutral-500">Niciun produs găsit.</p>
       ) : (

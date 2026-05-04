@@ -146,6 +146,7 @@ export default function RegisterPage() {
         companyName: res.user?.companyName ?? null,
         companyVatId: res.user?.companyVatId ?? null,
         companyTradeRegister: res.user?.companyTradeRegister ?? null,
+        isVatPayer: res.user?.isVatPayer ?? null,
       });
       router.push('/cont/setari');
       router.refresh();

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SectionNavigator } from '@/components/content/section-navigator';
 import { CategoryBreadcrumbs } from '@/features/categories/category-breadcrumbs';
 import { siteConfig } from '@/config/site';
 
@@ -35,6 +36,12 @@ const sustainabilitySections = [
   },
 ];
 
+const navItems = [
+  { id: 'intro-sustenabilitate', title: 'Pe scurt' },
+  ...sustainabilitySections.map((section, i) => ({ id: `sustenabilitate-${i + 1}`, title: section.title })),
+  { id: 'contact-sustenabilitate', title: 'Sugestii și întrebări' },
+];
+
 export default function SustenabilitatePage() {
   const breadcrumbItems = [
     { name: 'Acasă', slug: '' },
@@ -51,15 +58,22 @@ export default function SustenabilitatePage() {
       />
       <h1 className="heading-page mb-8">Sustenabilitate</h1>
 
-      <div className="max-w-3xl space-y-8">
-        <p className="text-lg text-neutral-600 dark:text-neutral-400">
-          La {siteConfig.name} ne pasă de mediu și de responsabilitate socială. Pe această pagină găsești principiile și măsurile noastre în domeniul sustenabilității.
-        </p>
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+        <SectionNavigator items={navItems} title="Sustenabilitate" />
 
-        <ul className="space-y-6">
+        <div className="space-y-6">
+          <section id="intro-sustenabilitate" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+            <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Pe scurt</h2>
+            <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+              La {siteConfig.name} ne pasă de mediu și de responsabilitate socială. Pe această pagină găsești principiile pe care le urmărim în relația cu furnizorii, ambalajele, logistica și informarea clienților.
+            </p>
+          </section>
+
+          <ul className="space-y-6">
           {sustainabilitySections.map((section, i) => (
             <li
               key={i}
+              id={`sustenabilitate-${i + 1}`}
               className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
             >
               <h2 className="font-heading text-lg font-semibold text-neutral-900 dark:text-white">
@@ -68,15 +82,19 @@ export default function SustenabilitatePage() {
               <p className="mt-2 text-neutral-600 dark:text-neutral-400">{section.content}</p>
             </li>
           ))}
-        </ul>
+          </ul>
 
-        <p className="text-neutral-600 dark:text-neutral-400">
-          Pentru sugestii sau întrebări despre sustenabilitate, ne poți scrie la{' '}
-          <Link href="/contact" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            formularul de contact
-          </Link>
-          .
-        </p>
+          <section id="contact-sustenabilitate" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-800/50">
+            <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Sugestii și întrebări</h2>
+            <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+              Pentru sugestii sau întrebări despre sustenabilitate, aprovizionare responsabilă sau reciclare, ne poți scrie prin{' '}
+              <Link href="/contact" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+                formularul de contact
+              </Link>
+              .
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   );

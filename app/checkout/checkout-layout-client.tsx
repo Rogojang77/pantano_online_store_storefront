@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useCartStore } from '@/store';
 import { CheckoutStepIndicator } from '@/features/checkout/checkout-step-indicator';
+import { trackEvent } from '@/lib/analytics';
 
 const STEP_PATHS = ['/checkout/login', '/checkout/address', '/checkout/delivery', '/checkout/review'];
 const STEP_IDS = ['login', 'address', 'delivery', 'review'] as const;
@@ -21,6 +22,18 @@ export function CheckoutLayoutClient({ children }: { children: React.ReactNode }
       router.replace('/cart?from=checkout-empty');
     }
   }, [pathname, isConfirmation, itemCount, router]);
+
+  useEffect(() => {
+    if (!pathname) return;
+    if (!STEP_PATHS.includes(pathname)) return;
+    const step = STEP_IDS[STEP_PATHS.indexOf(pathname)];
+    if (!step) return;
+    trackEvent({
+      eventName: 'checkout_step',
+      checkoutStep: step,
+      source: pathname,
+    });
+  }, [pathname]);
 
   const currentStepId = STEP_PATHS.includes(pathname ?? '')
     ? STEP_IDS[STEP_PATHS.indexOf(pathname!)]
