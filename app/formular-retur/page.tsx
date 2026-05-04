@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SectionNavigator } from '@/components/content/section-navigator';
 import { CategoryBreadcrumbs } from '@/features/categories/category-breadcrumbs';
 import { ContactForm } from '@/features/contact/contact-form';
 import { siteConfig } from '@/config/site';
@@ -12,6 +13,13 @@ export const metadata: Metadata = {
     description: `Retururi – ${siteConfig.name}.`,
   },
 };
+
+const navItems = [
+  { id: 'dreptul-la-retragere', title: 'Dreptul la retragere' },
+  { id: 'cum-soliciti-retur', title: 'Cum soliciți returul' },
+  { id: 'trimite-cererea', title: 'Trimite cererea' },
+  { id: 'informatii-suplimentare', title: 'Informații suplimentare' },
+];
 
 export default function FormularReturPage() {
   const breadcrumbItems = [
@@ -29,8 +37,11 @@ export default function FormularReturPage() {
       />
       <h1 className="heading-page mb-8">Formular de retragere / retur</h1>
 
-      <div className="mx-auto max-w-3xl space-y-8">
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+        <SectionNavigator items={navItems} title="Formular de retur" />
+
+        <div className="space-y-8">
+        <div id="dreptul-la-retragere" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
           <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">
             Dreptul la retragere
           </h2>
@@ -44,7 +55,7 @@ export default function FormularReturPage() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+        <div id="cum-soliciti-retur" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
           <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">
             Cum soliciți retragerea sau returul
           </h2>
@@ -53,7 +64,7 @@ export default function FormularReturPage() {
           </p>
         </div>
 
-        <section aria-labelledby="form-retur-heading">
+        <section id="trimite-cererea" className="scroll-mt-24" aria-labelledby="form-retur-heading">
           <h2 id="form-retur-heading" className="heading-section mb-4">
             Trimite cererea de retragere / retur
           </h2>
@@ -69,17 +80,25 @@ export default function FormularReturPage() {
           </p>
         </section>
 
-        <p className="text-neutral-600 dark:text-neutral-400">
-          Mai multe detalii în{' '}
-          <Link href="/faq" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            întrebările frecvente
-          </Link>
-          {' '}și în{' '}
-          <Link href="/termeni" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            termenii și condițiile
-          </Link>
-          .
-        </p>
+        <section id="informatii-suplimentare" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-800/50">
+          <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Informații suplimentare</h2>
+          <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+            Mai multe detalii despre condițiile de retur și rambursare găsești în{' '}
+            <Link href="/politica-de-retur" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+              politica de retur
+            </Link>
+            , în{' '}
+            <Link href="/faq" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+              întrebările frecvente
+            </Link>
+            {' '}și în{' '}
+            <Link href="/termeni" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+              termenii și condițiile
+            </Link>
+            .
+          </p>
+        </section>
+        </div>
       </div>
     </div>
   );

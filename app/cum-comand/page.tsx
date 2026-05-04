@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SectionNavigator } from '@/components/content/section-navigator';
 import { CategoryBreadcrumbs } from '@/features/categories/category-breadcrumbs';
 import { siteConfig } from '@/config/site';
 
@@ -35,6 +36,12 @@ const steps = [
   },
 ];
 
+const navItems = [
+  { id: 'prezentare', title: 'Pe scurt' },
+  ...steps.map((step, i) => ({ id: `pas-${i + 1}`, title: `${i + 1}. ${step.title}` })),
+  { id: 'ajutor', title: 'Ai nevoie de ajutor?' },
+];
+
 export default function CumComandPage() {
   const breadcrumbItems = [
     { name: 'Acasă', slug: '' },
@@ -51,16 +58,23 @@ export default function CumComandPage() {
       />
       <h1 className="heading-page mb-8">Cum comand</h1>
 
-      <div className="max-w-3xl space-y-8">
-        <p className="text-lg text-neutral-600 dark:text-neutral-400">
-          Comandarea este simplă: alege produsele, completează datele și finalizează plata. Iată pașii în detaliu.
-        </p>
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+        <SectionNavigator items={navItems} title="Cum comand" />
 
-        <ol className="space-y-6">
+        <div className="space-y-8">
+          <section id="prezentare" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+            <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Pe scurt</h2>
+            <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+              Comandarea este simplă: alegi produsele, verifici coșul, completezi datele de livrare și facturare, selectezi opțiunea disponibilă și finalizezi plata online. Mai jos găsești pașii explicați clar, în ordinea în care îi vei parcurge pe site.
+            </p>
+          </section>
+
+          <ol className="space-y-6">
           {steps.map((step, i) => (
             <li
               key={i}
-              className="flex gap-4 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
+              id={`pas-${i + 1}`}
+              className="scroll-mt-24 flex gap-4 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
             >
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 font-heading font-bold text-primary-700 dark:bg-primary-900/40 dark:text-primary-300"
@@ -76,19 +90,23 @@ export default function CumComandPage() {
               </div>
             </li>
           ))}
-        </ol>
+          </ol>
 
-        <p className="text-neutral-600 dark:text-neutral-400">
-          Ai nevoie de ajutor? Consultă{' '}
-          <Link href="/faq" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            întrebările frecvente
-          </Link>
-          {' '}sau{' '}
-          <Link href="/contact" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            contactează-ne
-          </Link>
-          .
-        </p>
+          <section id="ajutor" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-800/50">
+            <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Ai nevoie de ajutor?</h2>
+            <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+              Dacă ai întrebări despre produse, disponibilitate, livrare sau plata comenzii, consultă{' '}
+              <Link href="/faq" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+                întrebările frecvente
+              </Link>
+              {' '}sau{' '}
+              <Link href="/contact" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+                contactează-ne
+              </Link>
+              .
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   );

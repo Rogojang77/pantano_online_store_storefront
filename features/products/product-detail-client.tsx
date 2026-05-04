@@ -22,6 +22,8 @@ import { useCartStore, useWishlistStore, useUIStore, useAuthStore } from '@/stor
 import { cn } from '@/lib/utils';
 import { getVatAwarePrices } from '@/lib/pricing';
 import { htmlToPlainTextExcerpt } from '@/lib/product-html';
+import { trackEvent } from '@/lib/analytics';
+import { getOdooNewPrice } from '@/lib/odoo-pricing';
 
 interface ProductDetailClientProps {
   product: Product;
@@ -75,6 +77,7 @@ export function ProductDetailClient({
   const prices = getVatAwarePrices(variant);
   const displayPrice = prices.gross;
   const compareAtPrice = variant?.compareAtPrice;
+  const odooNewPrice = getOdooNewPrice(product);
   const showCompanyNetPrice = user?.accountType === 'COMPANY' && prices.net != null;
   const vatStatusText = user?.isVatPayer === true ? 'Companie plătitoare de TVA' : null;
 
@@ -88,6 +91,14 @@ export function ProductDetailClient({
     setQuantity(1);
   }, [selectedVariantId]);
 
+  useEffect(() => {
+    trackEvent({
+      eventName: 'view_product',
+      productId: product.id,
+      source: `/produs/${product.slug}`,
+    });
+  }, [product.id, product.slug]);
+
   const performAddToCart = () => {
     if (!variant) return;
     const qty = Math.min(quantity, maxAddable);
@@ -98,10 +109,20 @@ export function ProductDetailClient({
       name: product.name,
       slug: product.slug,
       price: variant.price,
+      stockQuantity: variant.stockQuantity,
       imageUrl: primaryImage?.url,
       ean: variant.ean ?? variant.sku,
       sku: variant.sku,
       quantity: qty,
+    });
+    trackEvent({
+      eventName: 'add_to_cart',
+      productId: product.id,
+      metadata: {
+        variantId: variant.id,
+        quantity: qty,
+        unitPrice: variant.price,
+      },
     });
     setCartDrawerOpen(true);
   };
@@ -196,6 +217,11 @@ export function ProductDetailClient({
             {displayPrice != null && (
               <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {displayPrice.toFixed(2)} {siteConfig.currency}
+              </span>
+            )}
+            {odooNewPrice != null && (
+              <span className="rounded bg-emerald-100 px-2 py-1 text-sm font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                Preț nou: {odooNewPrice.toFixed(2)} {siteConfig.currency}
               </span>
             )}
             {compareAtPrice &&

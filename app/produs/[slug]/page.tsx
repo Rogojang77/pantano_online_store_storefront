@@ -3,6 +3,7 @@ import { productsApi, getCategoryBySlug, buildCategoryBreadcrumbs } from '@/lib/
 import { ProductDetailClient } from '@/features/products/product-detail-client';
 import type { Metadata } from 'next';
 import type { BreadcrumbItem } from '@/features/categories/category-breadcrumbs';
+import { htmlToPlainTextExcerpt } from '@/lib/product-html';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,12 +15,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   try {
     const product = await productsApi.bySlug(slug);
+    const metadataDescription = product.metaDescription
+      ? htmlToPlainTextExcerpt(product.metaDescription, 160)
+      : product.description
+        ? htmlToPlainTextExcerpt(product.description, 160)
+        : undefined;
     return {
       title: product.name,
-      description: product.metaDescription ?? product.description ?? undefined,
+      description: metadataDescription,
       openGraph: {
         title: product.name,
-        description: product.metaDescription ?? product.description ?? undefined,
+        description: metadataDescription,
       },
     };
   } catch {

@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
+import { getVatAwarePrices } from '@/lib/pricing';
+import { useAuthStore } from '@/store';
 
 const DEBOUNCE_MS = siteConfig.searchDebounceMs;
 
@@ -23,6 +25,7 @@ const SUGGESTIONS_PARAMS = {
 
 export function HeaderSearchTrigger({ className }: { className?: string }) {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
   const [inputValue, setInputValue] = useState('');
   const [open, setOpen] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -151,6 +154,12 @@ export function HeaderSearchTrigger({ className }: { className?: string }) {
                         const img =
                           product.images?.find((i) => i.isPrimary) ??
                           product.images?.[0];
+                        const variant = product.variants?.[0];
+                        const prices = getVatAwarePrices(variant);
+                        const displayPrice =
+                          user?.accountType === 'COMPANY' && prices.net != null
+                            ? prices.net
+                            : prices.gross;
                         return (
                           <li key={product.id}>
                             <Link
@@ -172,9 +181,9 @@ export function HeaderSearchTrigger({ className }: { className?: string }) {
                               <span className="min-w-0 flex-1 text-sm font-medium text-neutral-900 dark:text-white">
                                 {product.name}
                               </span>
-                              {product.variants?.[0] && (
+                              {displayPrice != null && (
                                 <span className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                                  {product.variants[0].price}{' '}
+                                  {displayPrice.toFixed(2)}{' '}
                                   {siteConfig.currency}
                                 </span>
                               )}

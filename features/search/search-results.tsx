@@ -6,6 +6,7 @@ import { ProductCard } from '@/features/products/product-card';
 import { ProductGridSkeleton } from '@/features/products/product-grid-skeleton';
 import { Pagination } from '@/components/layout/pagination';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { ErrorState } from '@/components/feedback/error-state';
 
 import type { SuggestedCategoryLink } from './search-empty-recovery';
 import { SearchEmptyRecovery } from './search-empty-recovery';
@@ -22,7 +23,7 @@ export function SearchResults({ query, page, limit, emptyRecoveryCategories = []
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ['search', 'products', query, page, limit],
     queryFn: () => searchApi.products({ q: query, page, limit }),
   });
@@ -32,6 +33,18 @@ export function SearchResults({ query, page, limit, emptyRecoveryCategories = []
 
   if (isPending) {
     return <ProductGridSkeleton count={limit} />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        title="Căutarea nu este disponibilă momentan"
+        error={error}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
   }
 
   if (products.length === 0) {

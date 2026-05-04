@@ -3,12 +3,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store';
+import { trackEvent } from '@/lib/analytics';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const isAuthenticated = Boolean(useAuthStore((s) => s.user));
 
   useEffect(() => {
+    trackEvent({ eventName: 'begin_checkout', source: '/checkout' });
     if (isAuthenticated) {
       router.replace('/checkout/address');
     } else {

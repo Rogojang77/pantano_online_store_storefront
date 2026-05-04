@@ -273,6 +273,16 @@ export interface SearchSuggestionsResult {
   totalProducts: number;
 }
 
+export interface PromotionSummary {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  value: string;
+  validTo: string;
+}
+
 // --- CMS blocks (headless-ready) ---
 export type CmsBlockType = 'hero' | 'promo_grid' | 'banner' | 'category_teaser';
 

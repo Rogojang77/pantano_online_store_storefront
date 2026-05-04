@@ -19,6 +19,7 @@ import type {
   LoginResponse,
   User,
   CategoryEffectiveAttribute,
+  PromotionSummary,
 } from '@/types/api';
 import { api } from '@/lib/api-client';
 
@@ -40,9 +41,6 @@ type ProductsQuery = {
 
 export const productsApi = {
   async list(params: ProductsQuery = {}): Promise<PaginatedResult<Product>> {
-    const page = params.page ?? 1;
-    const limit = params.limit ?? 24;
-
     const search = new URLSearchParams();
     if (params.page != null) search.set('page', String(params.page));
     if (params.limit != null) search.set('limit', String(params.limit));
@@ -60,46 +58,19 @@ export const productsApi = {
     if (params.sortBy) search.set('sortBy', params.sortBy);
     if (params.sortDir) search.set('sortDir', params.sortDir);
     const q = search.toString();
-    try {
-      return await api.get<PaginatedResult<Product>>(q ? `/products?${q}` : '/products');
-    } catch {
-      // No mock fallback: return an empty list on API failure.
-      return {
-        data: [],
-        meta: {
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        },
-      };
-    }
+    return api.get<PaginatedResult<Product>>(q ? `/products?${q}` : '/products');
   },
   async bySlug(slug: string): Promise<Product> {
     return api.get<Product>(`/products/slug/${encodeURIComponent(slug)}`);
   },
   async related(productId: string, limit = 8): Promise<Product[]> {
-    try {
-      return await api.get<Product[]>(`/products/${productId}/related?limit=${limit}`);
-    } catch {
-      return [];
-    }
+    return api.get<Product[]>(`/products/${productId}/related?limit=${limit}`);
   },
   async similar(productId: string, limit = 8): Promise<Product[]> {
-    try {
-      return await api.get<Product[]>(`/products/${productId}/similar?limit=${limit}`);
-    } catch {
-      return [];
-    }
+    return api.get<Product[]>(`/products/${productId}/similar?limit=${limit}`);
   },
   async reviews(productId: string, limit = 50): Promise<ProductReviewsResponse> {
-    try {
-      return await api.get<ProductReviewsResponse>(`/products/${productId}/reviews?limit=${limit}`);
-    } catch {
-      return { data: [], summary: { averageRating: 0, totalCount: 0 } };
-    }
+    return api.get<ProductReviewsResponse>(`/products/${productId}/reviews?limit=${limit}`);
   },
   createReview(
     productId: string,
@@ -108,11 +79,7 @@ export const productsApi = {
     return api.post<{ id: string }>(`/products/${productId}/reviews`, payload);
   },
   async questions(productId: string, limit = 50): Promise<ProductQuestionItem[]> {
-    try {
-      return await api.get<ProductQuestionItem[]>(`/products/${productId}/questions?limit=${limit}`);
-    } catch {
-      return [];
-    }
+    return api.get<ProductQuestionItem[]>(`/products/${productId}/questions?limit=${limit}`);
   },
   createQuestion(productId: string, question: string) {
     return api.post<{ id: string }>(`/products/${productId}/questions`, { question });
@@ -280,6 +247,7 @@ export interface ValidateCouponResult {
 export const promotionsApi = {
   validate: (code: string, subtotal?: number) =>
     api.post<ValidateCouponResult>('/promotions/validate', { code, subtotal }),
+  active: (limit = 6) => api.get<PromotionSummary[]>(`/promotions/active?limit=${limit}`),
 };
 
 export type { Cart, CartItem };

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SectionNavigator } from '@/components/content/section-navigator';
 import { CategoryBreadcrumbs } from '@/features/categories/category-breadcrumbs';
 import { siteConfig } from '@/config/site';
 
@@ -35,6 +36,12 @@ const deliverySections = [
   },
 ];
 
+const navItems = [
+  { id: 'prezentare-livrare', title: 'Pe scurt' },
+  ...deliverySections.map((section, i) => ({ id: `livrare-${i + 1}`, title: section.title })),
+  { id: 'suport-livrare', title: 'Suport livrare' },
+];
+
 export default function LivrareaProduselorPage() {
   const breadcrumbItems = [
     { name: 'Acasă', slug: '' },
@@ -51,16 +58,23 @@ export default function LivrareaProduselorPage() {
       />
       <h1 className="heading-page mb-8">Livrarea produselor</h1>
 
-      <div className="max-w-3xl space-y-8">
-        <p className="text-lg text-neutral-600 dark:text-neutral-400">
-          Livrăm produsele în toată țara. Mai jos găsești informații despre termene, costuri și opțiuni de ridicare.
-        </p>
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+        <SectionNavigator items={navItems} title="Livrarea produselor" />
 
-        <ul className="space-y-6">
+        <div className="space-y-6">
+          <section id="prezentare-livrare" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800">
+            <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Pe scurt</h2>
+            <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+              Livrăm produsele în toată țara, iar în checkout vei vedea opțiunile disponibile, costurile și termenul estimat pentru comanda ta. Mai jos găsești explicații clare despre livrare, ridicare și urmărirea coletului.
+            </p>
+          </section>
+
+          <ul className="space-y-6">
           {deliverySections.map((section, i) => (
             <li
               key={i}
-              className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
+              id={`livrare-${i + 1}`}
+              className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-800"
             >
               <h2 className="font-heading text-lg font-semibold text-neutral-900 dark:text-white">
                 {section.title}
@@ -68,19 +82,23 @@ export default function LivrareaProduselorPage() {
               <p className="mt-2 text-neutral-600 dark:text-neutral-400">{section.content}</p>
             </li>
           ))}
-        </ul>
+          </ul>
 
-        <p className="text-neutral-600 dark:text-neutral-400">
-          Pentru întrebări specifice despre livrare, consultă{' '}
-          <Link href="/faq" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            întrebările frecvente
-          </Link>
-          {' '}sau{' '}
-          <Link href="/contact" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
-            contactează-ne
-          </Link>
-          .
-        </p>
+          <section id="suport-livrare" className="scroll-mt-24 rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-700 dark:bg-neutral-800/50">
+            <h2 className="font-heading text-xl font-semibold text-neutral-900 dark:text-white">Suport livrare</h2>
+            <p className="mt-3 text-neutral-600 dark:text-neutral-400">
+              Pentru întrebări specifice despre livrare, termene, costuri sau statusul unei comenzi, consultă{' '}
+              <Link href="/faq" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+                întrebările frecvente
+              </Link>
+              {' '}sau{' '}
+              <Link href="/contact" className="text-primary-600 underline hover:no-underline dark:text-primary-400">
+                contactează-ne
+              </Link>
+              .
+            </p>
+          </section>
+        </div>
       </div>
     </div>
   );

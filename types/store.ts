@@ -8,6 +8,7 @@ import type { Product, ProductVariant } from '@/types/api';
 export interface LocalCartItem {
   variantId: string;
   quantity: number;
+  stockQuantity?: number;
   /** Snapshot for display when offline or before sync */
   productId?: string;
   name?: string;

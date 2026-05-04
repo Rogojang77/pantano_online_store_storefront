@@ -22,6 +22,8 @@ export function CartLineItem({
   compact = false,
 }: CartLineItemProps) {
   const lineTotal = (item.quantity * parseFloat(item.price ?? '0')).toFixed(2);
+  const reachedStockLimit =
+    item.stockQuantity != null && item.quantity >= item.stockQuantity;
 
   return (
     <li
@@ -82,7 +84,8 @@ export function CartLineItem({
             <button
               type="button"
               onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-              className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              disabled={reachedStockLimit}
+              className="flex h-8 w-8 items-center justify-center text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-neutral-700"
               aria-label="Mărește cantitatea"
             >
               +
@@ -100,6 +103,12 @@ export function CartLineItem({
         {compact && (
           <p className="mt-1 text-xs font-medium text-neutral-600 dark:text-neutral-400">
             Total: {lineTotal} {siteConfig.currency}
+          </p>
+        )}
+        {item.stockQuantity != null && (
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            Maxim disponibil: {item.stockQuantity}{' '}
+            {item.stockQuantity === 1 ? 'bucată' : 'bucăți'}
           </p>
         )}
       </div>

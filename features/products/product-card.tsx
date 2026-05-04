@@ -11,6 +11,7 @@ import { useCartStore, useWishlistStore, useUIStore, useAuthStore } from '@/stor
 import { cn } from '@/lib/utils';
 import { resolveBackendMediaUrl } from '@/lib/resolve-backend-media-url';
 import { getVatAwarePrices } from '@/lib/pricing';
+import { getOdooNewPrice } from '@/lib/odoo-pricing';
 
 interface ProductCardProps {
   product: Product;
@@ -23,6 +24,7 @@ const cartItemPayload = (product: Product, variant: NonNullable<Product['variant
   name: product.name,
   slug: product.slug,
   price: variant.price,
+  stockQuantity: variant.stockQuantity,
   imageUrl: img?.url,
   ean: variant.ean ?? variant.sku,
   sku: variant.sku,
@@ -53,6 +55,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
   const prices = getVatAwarePrices(variant);
   const displayPrice = prices.gross;
   const compareAtPrice = variant?.compareAtPrice;
+  const odooNewPrice = getOdooNewPrice(product);
   const stockQuantity = variant?.stockQuantity ?? 0;
   const inStock = stockQuantity > 0;
   const maxAddable = Math.max(0, stockQuantity - cartQty);
@@ -134,6 +137,15 @@ export function ProductCard({ product, className }: ProductCardProps) {
             Stoc epuizat
           </Badge>
         )}
+        {product.badges && product.badges.length > 0 && (
+          <div className="absolute left-1.5 top-8 flex flex-wrap gap-1">
+            {product.badges.slice(0, 2).map((badge) => (
+              <Badge key={badge} variant="outline" className="text-[10px] uppercase bg-white/90 dark:bg-neutral-800/90">
+                {badge}
+              </Badge>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           onClick={toggleWishlist}
@@ -161,6 +173,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
           {displayPrice != null && (
             <span className="text-base font-bold text-primary-600 dark:text-primary-400">
               {displayPrice.toFixed(2)} {siteConfig.currency}
+            </span>
+          )}
+          {odooNewPrice != null && (
+            <span className="text-xs font-medium rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+              Preț nou: {odooNewPrice.toFixed(2)} {siteConfig.currency}
             </span>
           )}
           {compareAtPrice && parseFloat(compareAtPrice) > (displayPrice ?? 0) && (
